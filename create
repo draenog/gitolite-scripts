@@ -1,0 +1,23 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+use lib $ENV{GL_BINDIR};
+
+use gitolite;
+
+die "Usage: create <repo>\n" unless ($#ARGV == 0);
+
+my $repo = shift @ARGV;
+$repo=~s/.git$//;
+$repo = "packages/$repo" ;
+die "$repo ends with a slash; I don't like that\n" if $repo =~ /\/$/;
+die "$repo has two consecutive periods; I don't like that\n" if $repo =~ /\.\./;
+
+my $user = $ENV{GL_USER};
+
+my ($perm, $owner) = check_access($repo);
+
+die "You don't have permissions to create $repo or it already exists\n" unless ($perm=~/C/);
+
+new_wild_repo($repo, $user);
