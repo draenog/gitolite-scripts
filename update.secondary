@@ -37,15 +37,15 @@ while read rev; do
        # Banned archive types
        #echo $ftype
        if [[ $ftype =~ "Zip archive" ]]; then
-           echo "File $name - please upload zip files to the lookaside instead"
+           echo "File $name - please upload zip files to the distfiles instead"
            bad_file_found=1
        fi
        if [[ $ftype =~ "compressed data" ]]; then
-           echo "File $name - please upload compressed files to the lookaside instead"
+           echo "File $name - please upload compressed files to the distfiles instead"
            bad_file_found=1
        fi
        if [[ $ftype =~ "tar archive" ]]; then
-           echo "File $name - please upload tarballs to the lookaside instead"
+           echo "File $name - please upload tarballs to the distfiles instead"
            bad_file_found=1
        fi
    done < $difflist
@@ -55,7 +55,6 @@ rm -f $tmp $difflist $revlist
 if [[ $bad_file_found -eq 1 ]]; then
     echo "===================="
     echo "Your commit contained problematic files."
-    echo "Please see http://fedoraproject.org/wiki/foo for more information."
     echo "===================="
 fi
 
