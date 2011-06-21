@@ -1,0 +1,64 @@
+#!/bin/bash
+
+# Maximum file size in bytes
+MAX_SIZE=20000
+
+bad_file_found=0
+new_rev=$3
+old_rev=$2
+tmp=$(mktemp /tmp/git.update.XXXXXX)
+tree=$(mktemp /tmp/git.diff-tree.XXXXXX)
+zero="0000000000000000000000000000000000000000"
+
+if [[ "$old_rev" == "$zero" ]]; then
+    git diff-tree -r --root "$new_rev" | sed '1d' > $tree
+else
+    git diff-tree -r "$old_rev" "$new_rev" > $tree
+fi
+while read old_mode new_mode old_sha1 new_sha1 status name; do
+    # skip lines showing parent commit
+    [[ -z "$new_sha1" ]] && continue;
+
+    # skip deletions
+    [[ "$new_sha1" = "$zero" ]] && continue
+
+    # Skip files named *patch
+    if [[ "$name" =~ [.]patch$ ]]; then
+        continue
+    fi
+
+    git cat-file blob $new_sha1 > $tmp
+    ftype="$((file "$tmp" | awk -F': ' '{print $2}') 2>/dev/null)"
+    fsize=$(stat -c%s "$tmp")
+
+    if [[ $fsize -gt $MAX_SIZE ]]; then
+        echo "File $name - exceeds maximum permitted size $MAX_SIZE"
+        bad_file_found=1
+    fi
+
+    # Banned archive types
+    #echo $ftype
+    if [[ $ftype =~ "Zip archive" ]]; then
+        echo "File $name - please upload zip files to the lookaside instead"
+        bad_file_found=1
+    fi
+    if [[ $ftype =~ "compressed data" ]]; then
+        echo "File $name - please upload compressed files to the lookaside instead"
+        bad_file_found=1
+    fi
+    if [[ $ftype =~ "tar archive" ]]; then
+        echo "File $name - please upload tarballs to the lookaside instead"
+        bad_file_found=1
+    fi
+
+done < $tree
+
+rm -f $tmp $tree
+if [[ $bad_file_found -eq 1 ]]; then
+    echo "===================="
+    echo "Your commit contained problematic files."
+    echo "Please see http://fedoraproject.org/wiki/foo for more information."
+    echo "===================="
+fi
+
+exit $bad_file_found
