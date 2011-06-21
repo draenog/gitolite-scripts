@@ -21,7 +21,7 @@ while read rev; do
        [[ "$new_sha1" = "$zero" ]] && continue
 
        # Skip files named *patch
-       if [[ "${name%@(.patch|diff)}" != "$name" ]]; then
+       if [[ "${name%@(.patch|.diff|.spec)}" != "$name" ]]; then
            continue
        fi
 
