@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Maximum file size in bytes
 MAX_SIZE=20000
@@ -21,7 +21,7 @@ while read rev; do
        [[ "$new_sha1" = "$zero" ]] && continue
 
        # Skip files named *patch
-       if [[ "$name" =~ [.]patch$ ]]; then
+       if [[ "${name%@(.patch|diff)}" != "$name" ]]; then
            continue
        fi
 
@@ -29,25 +29,28 @@ while read rev; do
        ftype="$((file "$tmp" | awk -F': ' '{print $2}') 2>/dev/null)"
        fsize=$(stat -c%s "$tmp")
 
-       if [[ $fsize -gt $MAX_SIZE ]]; then
-           echo "File $name - exceeds maximum permitted size $MAX_SIZE"
-           bad_file_found=1
-       fi
-
        # Banned archive types
        #echo $ftype
-       if [[ $ftype =~ "Zip archive" ]]; then
-           echo "File $name - please upload zip files to the distfiles instead"
-           bad_file_found=1
-       fi
-       if [[ $ftype =~ "compressed data" ]]; then
-           echo "File $name - please upload compressed files to the distfiles instead"
-           bad_file_found=1
-       fi
-       if [[ $ftype =~ "tar archive" ]]; then
-           echo "File $name - please upload tarballs to the distfiles instead"
-           bad_file_found=1
-       fi
+       case "$ftype" in
+           *"Zip archive"*)
+                echo "File $name - please upload zip files to the distfiles instead"
+                bad_file_found=1
+                ;;
+           *"compressed data"*)
+                echo "File $name - please upload compressed files to the distfiles instead"
+                bad_file_found=1
+                ;;
+           *"tar archive*"*)
+                echo "File $name - please upload tarballs to the distfiles instead"
+                bad_file_found=1
+                ;;
+           *)
+                if [[ $fsize -gt $MAX_SIZE ]]; then
+                    echo "File $name - exceeds maximum permitted size $MAX_SIZE"
+                    bad_file_found=1
+                fi
+                ;;
+        esac
    done < $difflist
 done < $revlist
 
