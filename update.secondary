@@ -2,6 +2,7 @@
 
 # Maximum file size in bytes
 MAX_SIZE=20000
+DIFF_MAX_SIZE=1000000
 
 bad_file_found=0
 new_rev=$3
@@ -43,6 +44,12 @@ while read rev; do
            *"tar archive*"*)
                 echo "File $name - please upload tarballs to the distfiles instead"
                 bad_file_found=1
+                ;;
+           *'English text'*|*'ASCII text'*|*'unified diff output'*)
+                if [[ $fsize -gt $DIFF_MAX_SIZE ]]; then
+                    echo "File $name - exceeds maximum permitted size $DIFF_MAX_SIZE"
+                    bad_file_found=1
+                fi
                 ;;
            *)
                 if [[ $fsize -gt $MAX_SIZE ]]; then
