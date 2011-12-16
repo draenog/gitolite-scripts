@@ -55,7 +55,7 @@ while read rev; do
                 ;;
            *)
                 if [[ $fsize -gt $MAX_SIZE ]]; then
-                    echo "File $name - exceeds maximum permitted size $MAX_SIZE"
+                    echo "File $name - $fsize exceeds maximum permitted size $MAX_SIZE"
                     bad_file_found=1
                 fi
                 ;;
