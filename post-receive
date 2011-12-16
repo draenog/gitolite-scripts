@@ -1,0 +1,24 @@
+#!/usr/bin/python3 -u
+
+import glob
+import imp
+import os
+import sys
+import subprocess
+
+
+data = sys.stdin.readlines()
+
+if (os.path.isdir('hooks/post-receive.d')):
+    for hook in os.listdir('hooks/post-receive.d'):
+        hook = os.path.join('hooks/post-receive.d', hook)
+        if (hook.endswith(('~','.bak','.rpmsave','.rpmnew')) or not os.access(hook, os.X_OK)):
+            continue
+        hook_process = subprocess.Popen([hook], stdin=subprocess.PIPE)
+        for line in data:
+            hook_process.stdin.write(line.encode('utf-8'))
+        hook_process.communicate()
+
+for pluginfile in glob.glob('hooks/post-receive.python.d/*.py'):
+    plugin = imp.load_source(os.path.basename(pluginfile), pluginfile)
+    plugin.run(data)
