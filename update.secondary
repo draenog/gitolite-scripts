@@ -45,7 +45,9 @@ while read rev; do
                 echo "File $name - please upload tarballs to the distfiles instead"
                 bad_file_found=1
                 ;;
-           *'English text'*|*'ASCII text'*|*'unified diff output'*)
+           *'unified diff output'*)
+                ;;
+           *'English text'*|*'ASCII text'*)
                 if [[ $fsize -gt $DIFF_MAX_SIZE ]]; then
                     echo "File $name - exceeds maximum permitted size $DIFF_MAX_SIZE"
                     bad_file_found=1
