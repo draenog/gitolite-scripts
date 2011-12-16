@@ -47,7 +47,7 @@ while read rev; do
                 ;;
            *'unified diff output'*)
                 ;;
-           *'English text'*|*'ASCII text'*)
+           *'English text'*|*'ASCII text'*|*'ASCII C program text'*)
                 if [[ $fsize -gt $DIFF_MAX_SIZE ]]; then
                     echo "File $name - exceeds maximum permitted size $DIFF_MAX_SIZE"
                     bad_file_found=1
