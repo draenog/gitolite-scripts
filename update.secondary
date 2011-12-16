@@ -1,8 +1,8 @@
 #!/bin/sh
 
 # Maximum file size in bytes
-MAX_SIZE=20000
-DIFF_MAX_SIZE=1000000
+MAX_SIZE=200000
+DIFF_MAX_SIZE=2000000
 
 bad_file_found=0
 new_rev=$3
