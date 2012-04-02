@@ -1,12 +1,19 @@
+import configparser
 import os
 import subprocess
 from git_slug.gitconst import EMPTYSHA1
 
-DISTFILES_EMAIL = None
 MAILFROMHOST = 'pld-linux.org'
 MAILCOMMAND = '/usr/sbin/sendmail -t'.split()
 
+
+def readconfig():
+    config = configparser.ConfigParser(delimiters='=', interpolation=None, strict=False)
+    config.read(os.path.expanduser('~/.gitconfig'))
+    return config.get('hooks', 'distfiles', fallback=None)
+
 def distfiles_notification(login, package, branch):
+    DISTFILES_EMAIL = readconfig()
     if DISTFILES_EMAIL is None:
         return
     mailprocess = subprocess.Popen(MAILCOMMAND, stdin=subprocess.PIPE)
