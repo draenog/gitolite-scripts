@@ -42,5 +42,5 @@ def run(data):
         return
     for line in data:
         (sha1old, sha1, ref) = line.split()
-        if ref.startswith('refs/heads/') and sha1old != EMPTYSHA1:
+        if ref.startswith('refs/heads/') and sha1 != EMPTYSHA1:
             distfiles_notification(os.getenv('GL_USER'), gitrepo, ref)
