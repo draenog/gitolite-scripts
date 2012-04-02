@@ -11,7 +11,7 @@ revlist=$(mktemp /tmp/git.update.XXXXXX)
 difflist=$(mktemp /tmp/git.update.XXXXXX)
 zero="0000000000000000000000000000000000000000"
 
-git rev-list $new_rev --not --all > $revlist
+[ $new_rev = $zero ] || git rev-list $new_rev --not --all > $revlist
 while read rev; do
    git diff-tree --root $rev > $difflist
    while read old_mode new_mode old_sha1 new_sha1 status name; do
