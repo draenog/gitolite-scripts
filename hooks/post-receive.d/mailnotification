@@ -122,6 +122,10 @@ prep_for_email()
 		refs/tags/*)
 			return 1
 			;;
+		refs/notes/*)
+			# branch
+			refname_type="note"
+                        short_refname=${refname##refs/}
 			;;
 		refs/heads/*,commit)
 			# branch
@@ -195,7 +199,7 @@ generate_email()
 	# Call the correct body generation function
 	fn_name=general
 	case "$refname_type" in
-	"tracking branch"|branch)
+	"tracking branch"|branch|note)
 		fn_name=branch
 		;;
 	"annotated tag")
