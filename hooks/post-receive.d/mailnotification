@@ -119,19 +119,9 @@ prep_for_email()
 	#  - unannoted tag
 	#  - annotated tag
 	case "$refname","$rev_type" in
-		refs/tags/*,commit)
-			# un-annotated tag
-			refname_type="tag"
-			short_refname=${refname##refs/tags/}
+		refs/tags/*)
+			return 1
 			;;
-		refs/tags/*,tag)
-			# annotated tag
-			refname_type="annotated tag"
-			short_refname=${refname##refs/tags/}
-			# change recipients
-			if [ -n "$announcerecipients" ]; then
-				recipients="$announcerecipients"
-			fi
 			;;
 		refs/heads/*,commit)
 			# branch
