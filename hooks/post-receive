@@ -15,8 +15,11 @@ if (os.path.isdir('hooks/post-receive.d')):
         if (hook.endswith(('~','.bak','.rpmsave','.rpmnew')) or not os.access(hook, os.X_OK)):
             continue
         hook_process = subprocess.Popen([hook], stdin=subprocess.PIPE)
-        for line in data:
-            hook_process.stdin.write(line.encode('utf-8'))
+        try:
+            for line in data:
+                hook_process.stdin.write(line.encode('utf-8'))
+        except IOError:
+            pass
         hook_process.communicate()
 
 for pluginfile in glob.glob('hooks/post-receive.python.d/*.py'):
