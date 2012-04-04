@@ -50,7 +50,7 @@ use vars qw ($project $noisy $rpc_uri
 ### Configuration
 
 # Project name (as known to CIA).
-$project = 'Cogito';
+$project = 'pld';
 
 # If using XML-RPC, connect to this URI.
 $rpc_uri = 'http://cia.vc/RPC2';
@@ -66,7 +66,7 @@ $noisy = 0;
 # while they allow outgoing mail. Also, this script will hang and eventually
 # not deliver the event at all if CIA server happens to be down, which is
 # unfortunately not an uncommon condition.
-$xml_rpc = 0;
+$xml_rpc = 1;
 
 # This variable should contain a regexp, against which each file will be
 # checked, and if the regexp is matched, the file is ignored. This can be
