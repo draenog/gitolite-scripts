@@ -107,8 +107,11 @@ my $state = 0;
 $logmsg = '';
 while (defined ($line = <COMMIT>)) {
   if ($state == 1) {
+    unless ($noisy or length($line)>1) {
+      $state++;
+      next;
+    }
     $logmsg .= $line;
-    $noisy or $state++;
     next;
   } elsif ($state > 1) {
     next;
@@ -132,6 +135,7 @@ while (defined ($line = <COMMIT>)) {
   }
 }
 close COMMIT;
+chomp $logmsg;
 
 
 open DIFF, "git diff-tree -r $parent[0] $tree|" or die "git diff-tree $parent[0] $tree: $!";
