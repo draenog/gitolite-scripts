@@ -41,7 +41,7 @@
 # the pushed commits will be reported through CIA.
 
 use strict;
-use vars qw ($project $from_email $dest_email $noisy $rpc_uri $sendmail
+use vars qw ($project $noisy $rpc_uri
 		$xml_rpc $ignore_regexp $alt_local_message_target);
 
 
@@ -52,18 +52,8 @@ use vars qw ($project $from_email $dest_email $noisy $rpc_uri $sendmail
 # Project name (as known to CIA).
 $project = 'Cogito';
 
-# The from address in generated mails.
-$from_email = 'pasky@ucw.cz';
-
-# Mail all reports to this address.
-$dest_email = 'cia@cia.vc';
-
 # If using XML-RPC, connect to this URI.
 $rpc_uri = 'http://cia.vc/RPC2';
-
-# Path to your USCD sendmail compatible binary (your mailer daemon created this
-# program somewhere).
-$sendmail = '/usr/sbin/sendmail';
 
 # If set, the script will send CIA the full commit message. If unset, only the
 # first line of the commit message will be sent.
@@ -257,32 +247,5 @@ if ($xml_rpc) {
   exit;
 }
 
-
-
-### Send out the mail
-
-
-# Open our mail program
-
-open (MAIL, "| $sendmail -t -oi -oem") or die "Cannot execute $sendmail : " . ($?>>8);
-
-
-# The mail header
-
-print MAIL <<EOM;
-From: $from_email
-To: $dest_email
-Content-type: text/xml
-Subject: DeliverXML
-
-EOM
-
-print MAIL $message;
-
-
-# Close the mail
-
-close MAIL;
-die "$0: sendmail exit status " . ($? >> 8) . "\n" unless ($? == 0);
 
 # vi: set sw=2:
