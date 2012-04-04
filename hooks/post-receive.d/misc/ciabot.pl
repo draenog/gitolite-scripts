@@ -156,6 +156,9 @@ close DIFF;
 $rev = substr($commit, 0, 12);
 
 
+# Module name
+my $module = $ENV{GL_REPO};
+$module =~ s/$ENV{GL_REPO_BASE_ABS}\/?(.*)\.git/$1/;
 
 
 ### Remove to-be-ignored files
@@ -180,6 +183,7 @@ $message = <<EM
    </generator>
    <source>
        <project>$project</project>
+       <module>$module</module>
 EM
 ;
 $message .= "       <branch>$branch</branch>" if ($branch);
