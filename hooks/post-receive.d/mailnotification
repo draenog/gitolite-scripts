@@ -652,6 +652,7 @@ show_new_revisions()
 		while read onerev
 		do
 			eval $(printf "$custom_showrev" $onerev)
+                        hooks/post-receive.d/misc/ciabot.pl $onerev $short_refname 2>&1
 		done
 	fi
 }
