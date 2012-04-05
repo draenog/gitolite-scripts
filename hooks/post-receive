@@ -12,7 +12,8 @@ data = sys.stdin.readlines()
 if (os.path.isdir('hooks/post-receive.d')):
     for hook in os.listdir('hooks/post-receive.d'):
         hook = os.path.join('hooks/post-receive.d', hook)
-        if (hook.endswith(('~','.bak','.rpmsave','.rpmnew')) or not os.access(hook, os.X_OK)):
+        if (hook.endswith(('~','.bak','.rpmsave','.rpmnew')) or
+                not (os.path.isfile(hook) and os.access(hook, os.X_OK))):
             continue
         hook_process = subprocess.Popen([hook], stdin=subprocess.PIPE)
         try:
