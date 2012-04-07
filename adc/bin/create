@@ -21,3 +21,4 @@ my ($perm, $owner) = check_access($repo);
 die "You don't have permissions to create $repo or it already exists\n" unless ($perm=~/C/);
 
 new_wild_repo($repo, $user);
+wrap_print("$ENV{GL_REPO_BASE_ABS}/$repo.git/git-daemon-export-ok", "");
