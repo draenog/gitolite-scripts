@@ -653,7 +653,7 @@ show_new_revisions()
 		do
 			eval $(printf "$custom_showrev" $onerev)
                         [ -n "$ciaproject" ] &&
-                            hooks/post-receive.d/misc/ciabot.pl $onerev $short_refname $ciaproject 2>&1
+                            hooks/post-receive.d/misc/ciabot.pl $onerev $short_refname $ciaproject 1>&2
 		done
 	fi
 }
