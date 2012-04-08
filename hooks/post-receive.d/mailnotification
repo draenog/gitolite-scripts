@@ -652,7 +652,8 @@ show_new_revisions()
 		while read onerev
 		do
 			eval $(printf "$custom_showrev" $onerev)
-                        hooks/post-receive.d/misc/ciabot.pl $onerev $short_refname 2>&1
+                        [ -n "$ciaproject" ] &&
+                            hooks/post-receive.d/misc/ciabot.pl $onerev $short_refname $ciaproject 2>&1
 		done
 	fi
 }
@@ -714,6 +715,7 @@ envelopesender=$(git config hooks.envelopesender)
 emailprefix=$(git config hooks.emailprefix || echo '[SCM] ')
 custom_showrev=$(git config hooks.showrev)
 maxlines=$(git config hooks.emailmaxlines)
+ciaproject=$(git config hooks.ciaproject)
 
 # --- Main loop
 # Allow dual mode: run from the command line just like the update hook, or

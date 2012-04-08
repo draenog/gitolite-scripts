@@ -49,9 +49,6 @@ use vars qw ($project $noisy $rpc_uri
 
 ### Configuration
 
-# Project name (as known to CIA).
-$project = 'pld';
-
 # If using XML-RPC, connect to this URI.
 $rpc_uri = 'http://cia.vc/RPC2';
 
@@ -101,6 +98,7 @@ my $line;
 # The commit stuff
 $commit = $ARGV[0];
 $branch = $ARGV[1];
+$project = $ARGV[2];
 
 open COMMIT, "git cat-file commit $commit|" or die "git cat-file commit $commit: $!";
 my $state = 0;
