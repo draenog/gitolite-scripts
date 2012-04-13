@@ -9,7 +9,7 @@ use gitolite;
 die "Usage: create <repo>\n" unless ($#ARGV == 0);
 
 my $repo = shift @ARGV;
-$repo=~s/.git$//;
+$repo=~s/\.git$//;
 die "$repo contains a slash; I don't like that\n" if $repo =~ /\//;
 die "$repo has two consecutive periods; I don't like that\n" if $repo =~ /\.\./;
 $repo = "packages/$repo" ;
