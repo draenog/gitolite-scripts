@@ -193,7 +193,6 @@ $message .= <<EM
    <body>
        <commit>
            <author>$user</author>
-           <revision>$rev</revision>
            <files>
 EM
 ;
