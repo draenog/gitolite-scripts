@@ -223,6 +223,7 @@ generate_email_header()
 	From: $GL_USER <$GL_USER@pld-linux.org>
 	To: $recipients
 	Subject: ${emailprefix}$projectdesc $refname_type $short_refname ${change_type}d.
+	Content-Type: text/plain; charset="utf8"
 	X-Git-Refname: $refname
 	X-Git-Reftype: $refname_type
 	X-Git-Oldrev: $oldrev
