@@ -82,9 +82,12 @@ class RefChange(object):
         else:
             self.change_type = INVALID_TAG
 
-        m = re.match(r"refs/[^/]*/(.*)", refname)
+        m = re.match(r"refs/([^/]*)/(.*)", refname)
         if m:
-            self.short_refname = m.group(1)
+            if m.group(1) == "notes":
+                self.short_refname = m.group(1) + "/" + m.group(2)
+            else:
+                self.short_refname = m.group(2)
         else:
             self.short_refname = refname
 
@@ -809,7 +812,7 @@ def make_change(oldrev, newrev, refname):
                 return make(AnnotatedTagUpdate)
         else:
             return make_misc_change("%s is not a commit or tag object" % target)
-    elif re.match(r'^refs/heads/.*$', refname):
+    elif re.match(r'^refs/heads/.*$', refname) or re.match(r'^refs/notes/.*$', refname):
         if object_type == 'commit':
             if change_type == CREATE:
                 return make(BranchCreation)
