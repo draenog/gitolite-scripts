@@ -109,6 +109,7 @@ def git_run(command, *args, **kwargs):
     if interactive or outfile:
         return None
     else:
+        output = output.decode('utf8')
         if do_split_lines:
             return output.strip().splitlines()
         else:

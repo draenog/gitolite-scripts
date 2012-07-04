@@ -34,7 +34,7 @@ import re
 import os
 import pwd
 import sys
-from email import Header
+from email import header as Header
 
 script_path = os.path.realpath(os.path.abspath(sys.argv[0]))
 script_dir = os.path.dirname(script_path)
@@ -132,7 +132,7 @@ Content-Transfer-Encoding: 8bit
             'recipients': recipients,
             'cc': ','.join(cc),
             'from_address': from_address,
-            'subject': Header.Header(subject.decode('utf-8')),
+            'subject': Header.Header(subject),
             'projectshort': projectshort,
             'refname': self.refname
        }, file=out)

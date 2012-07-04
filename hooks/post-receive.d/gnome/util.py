@@ -70,12 +70,12 @@ def _do_send_emails(email_in):
             current_file = None
         else:
             if last_line is not None:
-                os.write(current_file, last_line)
+                os.write(current_file, last_line.encode('utf8'))
             last_line = line
 
     if current_file is not None:
         if last_line is not None:
-            os.write(current_file, last_line)
+            os.write(current_file, last_line.encode('utf8'))
         os.close(current_file)
 
     # We're done interacting with the parent process, the rest happens
