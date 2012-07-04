@@ -21,9 +21,10 @@
 #
 # About
 # =====
-# This script is used to generate mail to commits-list@gnome.org when change
-# are pushed to the GNOME git repository. It accepts input in the form of
-# a Git post-receive hook, and generates appropriate emails.
+# This script is used to generate mail to pld-cvs-commit@lists.pld-linux.org when change
+# are pushed to the PLD git repository. It accepts input in the form of
+# a Git post-receive hook, and generates appropriate emails. It is based on script
+# used by GNOME.
 #
 # The attempt here is to provide a maximimally useful and robust output
 # with as little clutter as possible.
@@ -357,15 +358,6 @@ class BranchCreation(BranchChange):
     def __init__(self, *args):
         BranchChange.__init__(self, *args)
 
-        # Inform required parties in case of official branch creation
-        if re.match(r'gnome-[0-9]+-[0-9]+$', self.short_refname):
-            self.cc.update((
-                'release-team@gnome.org',
-                'gnome-doc-list@gnome.org',
-                'gnome-i18n@gnome.org',
-                '%s@src.gnome.org' % os.environ['USER']
-            ))
-
     def get_subject(self):
         return self.get_count_string() + "Created branch " + self.short_refname
 
@@ -432,10 +424,7 @@ Summary of changes:
     def generate_body_non_fast_forward(self, out):
         print >>out, s("""
 The branch '%(short_refname)s' was changed in a way that was not a fast-forward update.
-NOTE: This may cause problems for people pulling from the branch. For more information,
-please see:
-
- http://live.gnome.org/Git/Help/NonFastForward
+NOTE: This may cause problems for people pulling from the branch.
 
 Commits removed from the branch:
 
@@ -609,9 +598,6 @@ pointed to:
  %(old_commit_oneline)s
 
 NOTE: People pulling from the repository will not get the new tag.
-For more information, please see:
-
- http://live.gnome.org/Git/Help/TagUpdates
 
 New tag information:
 
@@ -666,9 +652,6 @@ It previously pointed to:
  %(old_commit_oneline)s
 
 NOTE: People pulling from the repository will not get the new tag.
-For more information, please see:
-
- http://live.gnome.org/Git/Help/TagUpdates
 """) % {
             'short_refname': self.short_refname,
             'commit_oneline': commit_oneline(self.newrev),

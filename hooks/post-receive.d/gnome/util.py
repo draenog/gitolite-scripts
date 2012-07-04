@@ -46,7 +46,7 @@ def strip_string(str):
 EMAIL_DELAY = 5
 
 # Some line that can never appear in any email we send out
-EMAIL_BOUNDARY="---@@@--- gnome-git-email ---@@@---\n"
+EMAIL_BOUNDARY="---@@@--- PLD-git-email ---@@@---\n"
 
 # Run in subprocess
 def _do_send_emails(email_in):
@@ -57,7 +57,7 @@ def _do_send_emails(email_in):
     # Read emails from the input pipe and write each to a file
     for line in email_in:
         if current_file is None:
-            current_file, filename = tempfile.mkstemp(suffix=".mail", prefix="gnome-post-receive-email-")
+            current_file, filename = tempfile.mkstemp(suffix=".mail", prefix="pld-post-receive-email-")
             email_files.append(filename)
 
         if line == EMAIL_BOUNDARY:
