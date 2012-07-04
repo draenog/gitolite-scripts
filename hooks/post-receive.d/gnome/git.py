@@ -58,7 +58,7 @@ def git_run(command, *args, **kwargs):
     interactive = False
     outfile = None
     do_split_lines = False
-    for (k,v) in kwargs.iteritems():
+    for (k,v) in kwargs.items():
         if k == '_quiet':
             quiet = True
         elif k == '_interactive':
@@ -102,8 +102,8 @@ def git_run(command, *args, **kwargs):
     output, error = process.communicate(input)
     if process.returncode != 0:
         if not quiet and not interactive:
-            print >>sys.stderr, error,
-            print output,
+            print(error, end=' ', file=sys.stderr)
+            print(output, end=' ')
         raise CalledProcessError(process.returncode, " ".join(to_run))
 
     if interactive or outfile:
@@ -138,7 +138,7 @@ def rev_list_commits(*args, **kwargs):
         raise RuntimeException("git rev-list didn't return an even number of lines")
 
     result = []
-    for i in xrange(0, len(lines), 2):
+    for i in range(0, len(lines), 2):
         m = re.match("commit\s+([A-Fa-f0-9]+)", lines[i])
         if not m:
             raise RuntimeException("Can't parse commit it '%s'", lines[i])
@@ -154,7 +154,7 @@ def load_commit(commit_id):
 
 # Return True if the commit has multiple parents
 def commit_is_merge(commit):
-    if isinstance(commit, basestring):
+    if isinstance(commit, str):
         commit = load_commit(commit)
 
     parent_count = 0
@@ -168,7 +168,7 @@ def commit_is_merge(commit):
 
 # Return a short one-line summary of the commit
 def commit_oneline(commit):
-    if isinstance(commit, basestring):
+    if isinstance(commit, str):
         commit = load_commit(commit)
 
     return commit.id[0:7]+"... " + commit.subject[0:59]

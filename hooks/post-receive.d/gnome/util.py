@@ -24,7 +24,7 @@ import tempfile
 import time
 
 def die(message):
-    print >>sys.stderr, message
+    print(message, file=sys.stderr)
     sys.exit(1)
 
 # This cleans up our generation code by allowing us to use the same indentation

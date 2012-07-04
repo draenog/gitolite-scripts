@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 #
 # gnome-post-receive-email - Post receive email hook for the GNOME Git repository
 #
@@ -118,7 +118,7 @@ class RefChange(object):
         if cc is None:
             cc = self.cc
 
-        print >>out, s("""
+        print(s("""
 To: %(recipients)s
 Cc: %(cc)s
 From: %(from_address)s
@@ -135,7 +135,7 @@ Content-Transfer-Encoding: 8bit
             'subject': Header.Header(subject.decode('utf-8')),
             'projectshort': projectshort,
             'refname': self.refname
-       }
+       }, file=out)
 
         if include_revs:
             if oldrev:
@@ -147,16 +147,16 @@ Content-Transfer-Encoding: 8bit
             else:
                 newrev = NULL_REVISION
 
-            print >>out, s("""
+            print(s("""
 X-Git-Oldrev: %(oldrev)s
 X-Git-Newrev: %(newrev)s
 """) % {
             'oldrev': oldrev,
             'newrev': newrev,
-       }
+       }, file=out)
 
         # Trailing newline to signal the end of the header
-        print >>out
+        print(file=out)
 
     def send_main_email(self):
         if not self.get_needs_main_email():
@@ -301,11 +301,11 @@ class BranchChange(RefChange):
                 detail_note = True
             else:
                 detail = ""
-            print >>out, "  " + commit_oneline(commit) + detail
+            print("  " + commit_oneline(commit) + detail, file=out)
 
         if detail_note:
-            print >>out
-            print >>out, "(*) This commit already existed in another branch; no separate mail sent"
+            print(file=out)
+            print("(*) This commit already existed in another branch; no separate mail sent", file=out)
 
     def send_extra_emails(self):
         total = len(self.added_commits)
@@ -363,18 +363,18 @@ class BranchCreation(BranchChange):
 
     def generate_body(self, out):
         if len(self.added_commits) > 0:
-            print >>out, s("""
+            print(s("""
 The branch '%(short_refname)s' was created.
 
 Summary of new commits:
 
 """) % {
             'short_refname': self.short_refname,
-       }
+       }, file=out)
 
             self.generate_commit_summary(out, self.added_commits)
         else:
-            print >>out, s("""
+            print(s("""
 The branch '%(short_refname)s' was created pointing to:
 
  %(commit_oneline)s
@@ -382,7 +382,7 @@ The branch '%(short_refname)s' was created pointing to:
 """) % {
             'short_refname': self.short_refname,
             'commit_oneline': commit_oneline(self.newrev)
-       }
+       }, file=out)
 
 class BranchUpdate(BranchChange):
     def get_project_extra(self):
@@ -414,15 +414,15 @@ class BranchUpdate(BranchChange):
                 return last_commit.subject[0:SUBJECT_MAX_SUBJECT_CHARS]
 
     def generate_body_normal(self, out):
-        print >>out, s("""
+        print(s("""
 Summary of changes:
 
-""")
+"""), file=out)
 
         self.generate_commit_summary(out, self.added_commits)
 
     def generate_body_non_fast_forward(self, out):
-        print >>out, s("""
+        print(s("""
 The branch '%(short_refname)s' was changed in a way that was not a fast-forward update.
 NOTE: This may cause problems for people pulling from the branch.
 
@@ -430,15 +430,15 @@ Commits removed from the branch:
 
 """) % {
             'short_refname': self.short_refname,
-       }
+       }, file=out)
 
         self.generate_commit_summary(out, self.removed_commits, show_details=False)
 
-        print >>out, s("""
+        print(s("""
 
 Commits added to the branch:
 
-""")
+"""), file=out)
         self.generate_commit_summary(out, self.added_commits)
 
     def generate_body(self, out):
@@ -452,11 +452,11 @@ class BranchDeletion(RefChange):
         return "Deleted branch " + self.short_refname
 
     def generate_body(self, out):
-        print >>out, s("""
+        print(s("""
 The branch '%(short_refname)s' was deleted.
 """) % {
             'short_refname': self.short_refname,
-       }
+       }, file=out)
 
 # ========================
 
@@ -511,7 +511,7 @@ class AnnotatedTagChange(RefChange):
     # Outputs information about the new tag
     def generate_tag_info(self, out):
 
-        print >>out, s("""
+        print(s("""
 Tagger: %(tagger)s
 Date: %(date)s
 
@@ -521,7 +521,7 @@ Date: %(date)s
             'tagger': self.tagger,
             'date': self.date,
             'message': self.message,
-       }
+       }, file=out)
 
         # We take the creation of an annotated tag as being a "mini-release-announcement"
         # and show a 'git shortlog' of the changes since the last tag that was an
@@ -536,18 +536,18 @@ Date: %(date)s
 
         if last_tag:
             revision_range = last_tag + ".." + self.newrev
-            print >>out, s("""
+            print(s("""
 Changes since the last tag '%(last_tag)s':
 
 """) % {
                 'last_tag': last_tag
-      }
+      }, file=out)
         else:
             revision_range = self.newrev
-            print >>out, s("""
+            print(s("""
 Changes:
 
-""")
+"""), file=out)
         out.write(git.shortlog(revision_range))
         out.write("\n")
 
@@ -562,13 +562,13 @@ class AnnotatedTagCreation(AnnotatedTagChange):
         return "Created tag " + self.short_refname
 
     def generate_body(self, out):
-        print >>out, s("""
+        print(s("""
 The %(tag_type)s '%(short_refname)s' was created.
 
 """) % {
             'tag_type': self.get_tag_type(),
             'short_refname': self.short_refname,
-       }
+       }, file=out)
         self.generate_tag_info(out)
 
 class AnnotatedTagDeletion(AnnotatedTagChange):
@@ -576,7 +576,7 @@ class AnnotatedTagDeletion(AnnotatedTagChange):
         return "Deleted tag " + self.short_refname
 
     def generate_body(self, out):
-        print >>out, s("""
+        print(s("""
 The %(tag_type)s '%(short_refname)s' was deleted. It previously pointed to:
 
  %(old_commit_oneline)s
@@ -584,14 +584,14 @@ The %(tag_type)s '%(short_refname)s' was deleted. It previously pointed to:
             'tag_type': self.get_tag_type(),
             'short_refname': self.short_refname,
             'old_commit_oneline': commit_oneline(self.old_commit_id)
-       }
+       }, file=out)
 
 class AnnotatedTagUpdate(AnnotatedTagChange):
     def get_subject(self):
         return "Updated tag " + self.short_refname
 
     def generate_body(self, out):
-        print >>out, s("""
+        print(s("""
 The tag '%(short_refname)s' was replaced with a new tag. It previously
 pointed to:
 
@@ -604,7 +604,7 @@ New tag information:
 """) % {
             'short_refname': self.short_refname,
             'old_commit_oneline': commit_oneline(self.old_commit_id),
-       }
+       }, file=out)
         self.generate_tag_info(out)
 
 # ========================
@@ -614,35 +614,35 @@ class LightweightTagCreation(RefChange):
         return "Created tag " + self.short_refname
 
     def generate_body(self, out):
-        print >>out, s("""
+        print(s("""
 The lightweight tag '%(short_refname)s' was created pointing to:
 
  %(commit_oneline)s
 """) % {
             'short_refname': self.short_refname,
             'commit_oneline': commit_oneline(self.newrev)
-       }
+       }, file=out)
 
 class LightweightTagDeletion(RefChange):
     def get_subject(self):
         return "Deleted tag " + self.short_refname
 
     def generate_body(self, out):
-        print >>out, s("""
+        print(s("""
 The lighweight tag '%(short_refname)s' was deleted. It previously pointed to:
 
  %(commit_oneline)s
 """) % {
             'short_refname': self.short_refname,
             'commit_oneline': commit_oneline(self.oldrev)
-       }
+       }, file=out)
 
 class LightweightTagUpdate(RefChange):
     def get_subject(self):
         return "Updated tag " + self.short_refname
 
     def generate_body(self, out):
-        print >>out, s("""
+        print(s("""
 The lightweight tag '%(short_refname)s' was updated to point to:
 
  %(commit_oneline)s
@@ -656,7 +656,7 @@ NOTE: People pulling from the repository will not get the new tag.
             'short_refname': self.short_refname,
             'commit_oneline': commit_oneline(self.newrev),
             'old_commit_oneline': commit_oneline(self.oldrev)
-       }
+       }, file=out)
 
 # ========================
 
@@ -665,11 +665,11 @@ class InvalidRefDeletion(RefChange):
         return "Deleted invalid ref " + self.refname
 
     def generate_body(self, out):
-        print >>out, s("""
+        print(s("""
 The ref '%(refname)s' was deleted. It previously pointed nowhere.
 """) % {
             'refname': self.refname,
-       }
+       }, file=out)
 
 # ========================
 
@@ -683,7 +683,7 @@ class MiscCreation(MiscChange):
         return "Unexpected: Created " + self.refname
 
     def generate_body(self, out):
-        print >>out, s("""
+        print(s("""
 The ref '%(refname)s' was created pointing to:
 
  %(newrev)s
@@ -695,14 +695,14 @@ This is unexpected because:
             'refname': self.refname,
             'newrev': self.newrev,
             'message': self.message
-      }
+      }, file=out)
 
 class MiscDeletion(MiscChange):
     def get_subject(self):
         return "Unexpected: Deleted " + self.refname
 
     def generate_body(self, out):
-        print >>out, s("""
+        print(s("""
 The ref '%(refname)s' was deleted. It previously pointed to:
 
  %(oldrev)s
@@ -714,14 +714,14 @@ This is unexpected because:
             'refname': self.refname,
             'oldrev': self.oldrev,
             'message': self.message
-      }
+      }, file=out)
 
 class MiscUpdate(MiscChange):
     def get_subject(self):
         return "Unexpected: Updated " + self.refname
 
     def generate_body(self, out):
-        print >>out, s("""
+        print(s("""
 The ref '%(refname)s' was updated from:
 
  %(newrev)s
@@ -738,7 +738,7 @@ This is unexpected because:
             'oldrev': self.oldrev,
             'newrev': self.newrev,
             'message': self.message
-      }
+      }, file=out)
 
 # ========================
 
