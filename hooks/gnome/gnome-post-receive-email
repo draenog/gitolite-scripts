@@ -112,11 +112,7 @@ class RefChange(object):
         raise NotImplementedError()
 
     def generate_header(self, out, subject, include_revs=True, oldrev=None, newrev=None, cc=None):
-        user = os.environ['USER']
-        if user_fullname:
-            from_address = "%s <%s@src.gnome.org>" % (Header.Header(user_fullname.decode('utf-8')), user)
-        else:
-            from_address = "%s@src.gnome.org" % (user)
+        from_address = "{0} <{0}@pld-linux.org>".format(os.getenv("GL_USER"))
 
         if cc is None:
             cc = self.cc
@@ -847,7 +843,6 @@ def make_change(oldrev, newrev, refname):
 
 def main():
     global projectshort
-    global user_fullname
     global recipients
 
     # No emails for a repository in the process of being imported
@@ -855,7 +850,7 @@ def main():
     if os.path.exists(os.path.join(git_dir, 'pending')):
         return
 
-    projectshort = get_module_name()
+    projectshort = os.getenv('GL_REPO')
 
     try:
         recipients=git.config("hooks.mailinglist", _quiet=True)
@@ -864,22 +859,6 @@ def main():
 
     if not recipients:
         die("hooks.mailinglist is not set")
-
-    # Figure out a human-readable username
-    try:
-        entry = pwd.getpwuid(os.getuid())
-        gecos = entry.pw_gecos
-    except:
-        gecos = None
-
-    if gecos != None:
-        # Typical GNOME account have John Doe <john.doe@example.com> for the GECOS.
-        # Comma-separated fields are also possible
-        m = re.match("([^,<]+)", gecos)
-        if m:
-            fullname = m.group(1).strip()
-            if fullname != "":
-                user_fullname = fullname
 
     changes = []
 
