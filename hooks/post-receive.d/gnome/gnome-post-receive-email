@@ -35,6 +35,7 @@ import os
 import pwd
 import sys
 from email import header as Header
+import email.utils
 
 script_path = os.path.realpath(os.path.abspath(sys.argv[0]))
 script_dir = os.path.dirname(script_path)
@@ -72,6 +73,8 @@ class RefChange(object):
         self.oldrev = oldrev
         self.newrev = newrev
         self.cc = set()
+        self.msgid = None
+        self.followed_msg = None
 
         if oldrev == None and newrev != None:
             self.change_type = CREATE
@@ -121,6 +124,10 @@ class RefChange(object):
         if cc is None:
             cc = self.cc
 
+        if self.msgid is not None:
+            self.followed_msg = self.msgid
+        self.msgid = email.utils.make_msgid(domain="pld-linux.org")
+
         print(s("""
 To: %(recipients)s
 Cc: %(cc)s
@@ -128,6 +135,7 @@ From: %(from_address)s
 Subject: %(subject)s
 Keywords: %(projectshort)s
 X-Git-Refname: %(refname)s
+Message-ID: %(msgid)s
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
@@ -137,9 +145,12 @@ Content-Transfer-Encoding: 8bit
             'from_address': from_address,
             'subject': Header.Header(subject),
             'projectshort': projectshort,
-            'refname': self.refname
+            'refname': self.refname,
+            'msgid': self.msgid
        }, file=out)
 
+        if self.followed_msg is not None:
+            print("References: {}".format(self.followed_msg), file=out)
         if include_revs:
             if oldrev:
                 oldrev = oldrev
