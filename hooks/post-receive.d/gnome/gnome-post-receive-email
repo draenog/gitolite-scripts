@@ -33,6 +33,7 @@
 import re
 import os
 import pwd
+import subprocess
 import sys
 from email import header as Header
 import email.utils
@@ -367,6 +368,9 @@ class BranchChange(RefChange):
             email_out.flush()
             git.show(commit.id, p=True, M=True, diff_filter="ACMRTUXB", pretty="format:---", _outfile=email_out)
             end_email()
+            if ciaproject:
+                ciabot_command = ["hooks/post-receive.d/misc/ciabot.pl", commit.id, self.short_refname, ciaproject]
+                ciabotprocess = subprocess.Popen(ciabot_command, stdout=subprocess.PIPE)
 
 class BranchCreation(BranchChange):
     def __init__(self, *args):
@@ -841,6 +845,7 @@ def make_change(oldrev, newrev, refname):
 def main():
     global projectshort
     global recipients
+    global ciaproject
 
     # No emails for a repository in the process of being imported
     git_dir = git.rev_parse(git_dir=True, _quiet=True)
@@ -851,6 +856,11 @@ def main():
 
     try:
         recipients=git.config("hooks.mailinglist", _quiet=True)
+    except CalledProcessError:
+        pass
+
+    try:
+        ciaproject=git.config("hooks.ciaproject", _quiet=True)
     except CalledProcessError:
         pass
 
