@@ -106,7 +106,7 @@ def start_email():
             # The child
 
             os.close(email_pipe[1])
-            email_in = os.fdopen(email_pipe[0])
+            email_in = os.fdopen(email_pipe[0], encoding='utf8')
 
             # Redirect stdin/stdout/stderr to/from /dev/null
             devnullin = os.open("/dev/null", os.O_RDONLY)
@@ -137,7 +137,7 @@ def start_email():
 
             sys.exit(0)
 
-        email_file = os.fdopen(email_pipe[1], "w")
+        email_file = os.fdopen(email_pipe[1], "w", encoding='utf8')
     else:
         # The email might not end with a newline, so add one. We'll
         # strip the last line, if blank, when emails, so the net effect
