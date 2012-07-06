@@ -124,7 +124,7 @@ class RefChange(object):
         if cc is None:
             cc = self.cc
 
-        if self.msgid is not None:
+        if self.followed_msg is None and  self.msgid is not None:
             self.followed_msg = self.msgid
         self.msgid = email.utils.make_msgid(domain="pld-linux.org")
 
