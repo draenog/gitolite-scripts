@@ -760,6 +760,15 @@ This is unexpected because:
 
 # ========================
 
+class NullChange(RefChange):
+    def prepare(self):
+        pass
+
+    def send_emails(self):
+        pass
+
+# ========================
+
 def make_change(oldrev, newrev, refname):
     refname = refname
 
@@ -813,7 +822,10 @@ def make_change(oldrev, newrev, refname):
     if re.match(r'^refs/tags/.*$', refname):
         if object_type == 'commit':
             if change_type == CREATE:
-                return make(LightweightTagCreation)
+                if re.match(r'^refs/tags/auto/.*$', refname):
+                    return make(NullChange)
+                else:
+                    return make(LightweightTagCreation)
             elif change_type == DELETE:
                 return make(LightweightTagDeletion)
             else:
