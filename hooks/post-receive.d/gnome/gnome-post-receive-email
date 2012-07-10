@@ -137,6 +137,7 @@ Subject: %(subject)s
 Keywords: %(projectshort)s
 X-Git-Refname: %(refname)s
 Message-ID: %(msgid)s
+Reply-To: %(replyto_address)s
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
@@ -147,7 +148,8 @@ Content-Transfer-Encoding: 8bit
             'subject': Header.Header(subject),
             'projectshort': projectshort,
             'refname': self.refname,
-            'msgid': self.msgid
+            'msgid': self.msgid,
+            'replyto_address': replyto
        }, file=out)
 
         if self.followed_msg is not None:
@@ -857,6 +859,7 @@ def make_change(oldrev, newrev, refname):
 def main():
     global projectshort
     global recipients
+    global replyto
     global ciaproject
 
     # No emails for a repository in the process of being imported
@@ -868,6 +871,11 @@ def main():
 
     try:
         recipients=git.config("hooks.mailinglist", _quiet=True)
+    except CalledProcessError:
+        pass
+
+    try:
+        replyto = git.config("hooks.replyto", _quiet=True)
     except CalledProcessError:
         pass
 
