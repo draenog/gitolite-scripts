@@ -12,6 +12,7 @@ my $repo = shift @ARGV;
 $repo=~s/\.git$//;
 die "$repo contains a slash; I don't like that\n" if $repo =~ /\//;
 die "$repo has two consecutive periods; I don't like that\n" if $repo =~ /\.\./;
+my $repo_short = $repo;
 $repo = "packages/$repo" ;
 
 my $user = $ENV{GL_USER};
@@ -22,3 +23,6 @@ die "You don't have permissions to create $repo or it already exists\n" unless (
 
 new_wild_repo($repo, $user);
 wrap_print("$ENV{GL_REPO_BASE_ABS}/$repo.git/git-daemon-export-ok", "");
+if(system("$ENV{HOME}/bin/pldgithub.py", "create", $repo_short)) {
+  die "Problem with creating gihub mirror for $repo";
+}
