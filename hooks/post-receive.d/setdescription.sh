@@ -1,6 +1,7 @@
 #!/bin/sh
 
-[ "${GL_REPO#packages/}" = "$GL_REPO" ] && exit
+repo=${GL_REPO#packages/}
+[ "$repo" = "$GL_REPO" ] && exit
 
 SPECSDIR=$(git config hooks.specsdir)
 [ -n "${SPECSDIR%%/*}" ] &&  SPECSDIR="$HOME/$SPECSDIR"
@@ -18,7 +19,12 @@ while read oldsha1 newsha1 ref; do
             if [ $change != D ]; then
                 summary=`git cat-file -p $newsha1:$file | grep -m 1 '^Summary:' \
                     | sed 's/Summary:[ \t]\+//'`
-                [ -n "$summary" ] && echo "$summary" > description || echo "Missing Summary in spec file $file"
+                [ -f description ] && description=`cat description`
+                [ -z "$summary" ] && echo "Missing Summary in spec file $file"
+                if [ -n "$summary" -a "$summary" != "$description" ]; then
+                    echo "$summary" > description
+                    ~/bin/pldgithub.py description "$repo" "$summary"
+                fi
                 [ -d $SPECSDIR ] && git --work-tree="$SPECSDIR" checkout -f  $newsha1 "$file"
             else
                 [ -d $SPECSDIR ] && rm --interactive=never "$SPECSDIR/$file"
