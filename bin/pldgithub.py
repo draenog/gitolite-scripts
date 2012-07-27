@@ -14,7 +14,8 @@ logpass = tuple(open(os.path.expanduser('~/auth'), 'r').readline().strip().split
 
 if sys.argv[1] == 'create':
     for newrepo in sys.argv[2:]:
-        req = requests.post("https://api.github.com/orgs/pld-linux/repos", auth=logpass, data=json.dumps({'name': newrepo}))
+        req = requests.post("https://api.github.com/orgs/pld-linux/repos", auth=logpass,
+                data=json.dumps({'name': newrepo, 'has_issues': False, 'has_wiki': False, 'has_downloads': False}))
         if not req.status_code == 201:
             raise SystemExit("Cannot create repository {} on github".format(newrepo))
 else:
