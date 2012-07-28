@@ -106,7 +106,7 @@ def start_email():
             # The child
 
             os.close(email_pipe[1])
-            email_in = os.fdopen(email_pipe[0], encoding='utf8')
+            email_in = os.fdopen(email_pipe[0], errors='replace', encoding='utf8')
 
             # Redirect stdin/stdout/stderr to/from /dev/null
             devnullin = os.open("/dev/null", os.O_RDONLY)
