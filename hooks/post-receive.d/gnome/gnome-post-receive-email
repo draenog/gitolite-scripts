@@ -145,7 +145,7 @@ Content-Transfer-Encoding: 8bit
             'recipients': recipients,
             'cc': ','.join(cc),
             'from_address': from_address,
-            'subject': Header.Header(subject),
+            'subject': Header.Header(subject, charset='utf8'),
             'projectshort': projectshort,
             'refname': self.refname,
             'msgid': self.msgid,
