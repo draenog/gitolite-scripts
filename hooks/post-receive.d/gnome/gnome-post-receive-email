@@ -368,7 +368,7 @@ class BranchChange(RefChange):
             email_out.flush()
             git.show(commit.id, M=True, stat=True, _outfile=email_out)
             email_out.flush()
-            git.show(commit.id, p=True, M=True, diff_filter="ACMRTUXB", pretty="format:---", _outfile=email_out)
+            git.show(commit.id, p=True, M=True, pretty="format:---", _outfile=email_out)
             end_email()
             if ciaproject:
                 ciabot_command = ["hooks/post-receive.d/misc/ciabot.pl", commit.id, self.short_refname, ciaproject]
