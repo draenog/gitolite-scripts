@@ -75,7 +75,10 @@ def git_run(command, *args, **kwargs):
             else:
                 to_run.append("--" + k.replace("_", "-"))
         else:
-            to_run.append("--" + k.replace("_", "-") + "=" + v)
+            if len(k) == 1:
+                to_run.append("-" + k + v)
+            else:
+                to_run.append("--" + k.replace("_", "-") + "=" + v)
 
     to_run.extend(args)
 
