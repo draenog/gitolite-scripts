@@ -131,7 +131,6 @@ class RefChange(object):
 
         print(s("""
 To: %(recipients)s
-Cc: %(cc)s
 From: %(from_address)s
 Subject: %(subject)s
 Keywords: %(projectshort)s
@@ -143,7 +142,6 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 """) % {
             'recipients': recipients,
-            'cc': ','.join(cc),
             'from_address': from_address,
             'subject': Header.Header(subject, charset='utf8').encode(),
             'projectshort': projectshort,
