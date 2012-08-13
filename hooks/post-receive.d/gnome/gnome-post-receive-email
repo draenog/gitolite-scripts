@@ -154,6 +154,8 @@ Content-Transfer-Encoding: 8bit
 
         if self.followed_msg is not None:
             print("References: {}".format(self.followed_msg), file=out)
+        else:
+            print("References: {}@pld-linux.org".format(projectshort.replace('/','_')), file=out)
         if include_revs:
             if oldrev:
                 oldrev = oldrev
