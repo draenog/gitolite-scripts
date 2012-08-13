@@ -368,7 +368,11 @@ class BranchChange(RefChange):
             email_out.flush()
             git.show(commit.id, M=True, stat=True, _outfile=email_out)
             email_out.flush()
-            git.show(commit.id, p=True, M=True, pretty="format:---", _outfile=email_out)
+            if orderfile is not None:
+                git.show(commit.id, p=True, M=True, pretty="format:---", O=orderfile,
+                        _outfile=email_out)
+            else:
+                git.show(commit.id, p=True, M=True, pretty="format:---", _outfile=email_out)
             end_email()
             if ciaproject:
                 ciabot_command = ["hooks/post-receive.d/misc/ciabot.pl", commit.id, self.short_refname, ciaproject]
@@ -861,6 +865,7 @@ def main():
     global recipients
     global replyto
     global ciaproject
+    global orderfile
 
     # No emails for a repository in the process of being imported
     git_dir = git.rev_parse(git_dir=True, _quiet=True)
@@ -881,6 +886,14 @@ def main():
         ciaproject = git.config("hooks.ciaproject", _quiet=True)
     except CalledProcessError:
         pass
+    try:
+        orderfile = git.config("hooks.orderfile", _quiet=True)
+    except CalledProcessError:
+        orderfile = None
+    else:
+        orderfile=os.path.join(os.path.expanduser("~"), orderfile)
+        if not os.path.isfile(orderfile) or not os.access(orderfile, os.R_OK):
+            orderfile = None
 
     if not recipients:
         die("hooks.mailinglist is not set")
