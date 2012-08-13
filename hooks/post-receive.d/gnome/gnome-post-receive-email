@@ -873,14 +873,12 @@ def main():
         recipients=git.config("hooks.mailinglist", _quiet=True)
     except CalledProcessError:
         pass
-
     try:
         replyto = git.config("hooks.replyto", _quiet=True)
     except CalledProcessError:
         pass
-
     try:
-        ciaproject=git.config("hooks.ciaproject", _quiet=True)
+        ciaproject = git.config("hooks.ciaproject", _quiet=True)
     except CalledProcessError:
         pass
 
