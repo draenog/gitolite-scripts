@@ -265,7 +265,8 @@ class BranchChange(RefChange):
                 try:
                     validref = git.rev_parse(parent, _quiet=True)
                 except CalledProcessError:
-                    self.added_commits = []
+                    self.added_commits = rev_list_commits(self.newrev)
+                    self.added_commits.reverse()
                 else:
                     self.added_commits = rev_list_commits(parent + ".." + self.newrev)
                     self.added_commits.reverse()
