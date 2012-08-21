@@ -136,12 +136,12 @@ close COMMIT;
 chomp $logmsg;
 
 
-open DIFF, "git diff-tree -r $parent[0] $tree|" or die "git diff-tree $parent[0] $tree: $!";
+open DIFF, "git diff-tree -r -c --root --name-only $commit|" or die "git diff-tree $parent[0] $tree: $!";
+$state=0;
 while (defined ($line = <DIFF>)) {
   chomp $line;
-  my @f;
-  (undef, @f) = split(/\t/, $line, 2);
-  push (@files, @f);
+  push (@files, $line) if($state);
+  $state++;
 }
 close DIFF;
 
