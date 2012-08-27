@@ -193,6 +193,14 @@ X-Git-Newrev: %(newrev)s
 
         end_email()
 
+    def generate_footnote(self, out, gitweb, repo):
+        print('''================================================================
+
+---- gitweb:
+
+{0}/{1}.git/commitdiff/{2}
+'''.format(gitweb, repo, self.newrev), file=out)
+
     # Allow multiple emails to be sent - used for branch updates
     def send_extra_emails(self):
         pass
@@ -374,6 +382,8 @@ class BranchChange(RefChange):
                         _outfile=email_out)
             else:
                 git.show(commit.id, p=True, M=True, pretty="format:---", _outfile=email_out)
+            if gitweb:
+                self.generate_footnote(email_out, gitweb, projectshort)
             end_email()
             if ciaproject:
                 ciabot_command = ["hooks/post-receive.d/misc/ciabot.pl", commit.id, self.short_refname, ciaproject]
@@ -866,6 +876,7 @@ def main():
     global recipients
     global replyto
     global ciaproject
+    global gitweb
     global orderfile
 
     # No emails for a repository in the process of being imported
@@ -887,6 +898,10 @@ def main():
         ciaproject = git.config("hooks.ciaproject", _quiet=True)
     except CalledProcessError:
         ciaproject = None
+    try:
+        gitweb = git.config("hooks.gitwebroot", _quiet=True)
+    except CalledProcessError:
+        gitweb = None
     try:
         orderfile = git.config("hooks.orderfile", _quiet=True)
     except CalledProcessError:
