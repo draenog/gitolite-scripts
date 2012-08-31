@@ -135,7 +135,6 @@ From: %(from_address)s
 Subject: %(subject)s
 Keywords: %(projectshort)s
 X-Git-Refname: %(refname)s
-Message-ID: %(msgid)s
 Reply-To: %(replyto_address)s
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -146,7 +145,6 @@ Content-Transfer-Encoding: 8bit
             'subject': Header.Header(subject, charset='utf8').encode(),
             'projectshort': projectshort,
             'refname': self.refname,
-            'msgid': self.msgid,
             'replyto_address': replyto
        }, file=out)
 
@@ -167,9 +165,16 @@ Content-Transfer-Encoding: 8bit
             print(s("""
 X-Git-Oldrev: %(oldrev)s
 X-Git-Newrev: %(newrev)s
+Message-ID: <%(msgid)s@jakas.domena.org>
+References: <%(old)s@jakas.domena.org> <%(new)s@jakas.domena.org>
+In-Reply-To: <%(reply)s@jakas.domena.org>
 """) % {
-            'oldrev': oldrev,
-            'newrev': newrev,
+		'oldrev': oldrev,
+		'newrev': newrev,
+		'msgid': newrev,
+		'old': oldrev,
+		'new': newrev,
+		'reply': oldrev
        }, file=out)
 
         # Trailing newline to signal the end of the header
