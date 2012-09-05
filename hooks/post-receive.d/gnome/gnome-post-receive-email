@@ -119,7 +119,7 @@ class RefChange(object):
     def generate_body(self, out):
         raise NotImplementedError()
 
-    def generate_header(self, out, subject, include_revs=True, oldrev=None, newrev=None, cc=None):
+    def generate_header(self, out, subject, include_revs=True, oldrev=None, newrev=None, cc=None, sha1=None):
         from_address = "{0} <{0}@pld-linux.org>".format(os.getenv("GL_USER"))
 
         if cc is None:
@@ -128,6 +128,10 @@ class RefChange(object):
         if self.followed_msg is None and  self.msgid is not None:
             self.followed_msg = self.msgid
         self.msgid = email.utils.make_msgid(domain="pld-linux.org")
+        if sha1:
+            self.msgid = "<{}_{}@pld-linux.org>".format(sha1, self.refname.replace('/','_'))
+        else:
+            self.msgid = email.utils.make_msgid(domain="pld-linux.org")
 
         print(s("""
 To: %(recipients)s
@@ -367,12 +371,12 @@ class BranchChange(RefChange):
             # for the total branch update. Without a cover email, we are conceptually
             # breaking up the update into individual updates for each commit
             if self.needs_cover_email:
-                self.generate_header(email_out, subject, include_revs=False, cc=[])
+                self.generate_header(email_out, subject, include_revs=False, cc=[], sha1=commit.id)
             else:
                 parent = git.rev_parse(commit.id + "^")
                 self.generate_header(email_out, subject,
                                      include_revs=True,
-                                     oldrev=parent, newrev=commit.id)
+                                     oldrev=parent, newrev=commit.id, sha1=commit.id)
 
             email_out.flush()
             git.show(commit.id, M=True, stat=True, _outfile=email_out)
