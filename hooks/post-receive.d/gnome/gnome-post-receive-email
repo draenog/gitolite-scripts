@@ -125,9 +125,11 @@ class RefChange(object):
         if cc is None:
             cc = self.cc
 
-        if self.followed_msg is None and  self.msgid is not None:
-            self.followed_msg = self.msgid
-        self.msgid = email.utils.make_msgid(domain="pld-linux.org")
+        if self.followed_msg is None:
+            if self.msgid is not None:
+                self.followed_msg = self.msgid
+            elif oldrev:
+                self.followed_msg = "<{}_{}@pld-linux.org>".format(oldrev, self.refname.replace('/','_'))
         if sha1:
             self.msgid = "<{}_{}@pld-linux.org>".format(sha1, self.refname.replace('/','_'))
         else:
@@ -156,8 +158,6 @@ Content-Transfer-Encoding: 8bit
 
         if self.followed_msg is not None:
             print("References: {}".format(self.followed_msg), file=out)
-        else:
-            print("References: {}@pld-linux.org".format(projectshort.replace('/','_')), file=out)
         if include_revs:
             if oldrev:
                 oldrev = oldrev
