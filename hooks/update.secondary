@@ -16,7 +16,7 @@ while read rev; do
    git diff-tree -r --root $rev > $difflist
    while read old_mode new_mode old_sha1 new_sha1 status name; do
        # skip lines showing parent commit
-       [[ -z "$new_sha1" ]] && continue;
+       [[ -z "$new_sha1" ]] && continue
 
        # skip deletions
        [[ "$new_sha1" = "$zero" ]] && continue
