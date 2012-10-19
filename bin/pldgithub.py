@@ -18,12 +18,12 @@ if sys.argv[1] == 'create':
         req = requests.post("https://api.github.com/orgs/pld-linux/repos", auth=logpass,
                 data=json.dumps({'name': newrepo, 'has_issues': False, 'has_wiki': False, 'has_downloads': False}))
         if not req.status_code == 201:
-            raise SystemExit("Cannot create {} on github".format(newrepo))
+            sys.stderr.write("Cannot create {} on github\n".format(newrepo))
 elif sys.argv[1] == 'delete':
     for cannedrepo in [repo.strip() for repo in sys.argv[2:]]:
         req = requests.delete("https://api.github.com/repos/pld-linux/"+cannedrepo, auth=logpass)
         if not req.status_code == 204:
-            raise SystemExit("Cannot delete {} from github".format(cannedrepo))
+            sys.stderr.write("Cannot delete {} from github\n".format(cannedrepo))
 else:
     (repo, newdesc) = [arg.strip() for arg in sys.argv[2:4]]
     req = requests.patch("https://api.github.com/repos/pld-linux/"+repo, auth=logpass,
