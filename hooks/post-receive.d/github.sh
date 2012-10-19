@@ -2,7 +2,7 @@
 
 [ "${GL_REPO#packages/}" = "$GL_REPO" ] && exit
 
-check=$(basename "${GL_REPO}").git
+check=$(basename "${GL_REPO}")
 if [ -f $HOME/ignore ] && grep "^$check$" $HOME/ignore; then
     echo 'omitting push to github';
     exit;
