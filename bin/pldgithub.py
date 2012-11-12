@@ -37,6 +37,10 @@ if sys.argv[1] == 'create':
                 data=json.dumps({'name': newrepo, 'has_issues': False, 'has_wiki': False, 'has_downloads': False}))
         if not req.status_code == 201:
             sys.stderr.write("Cannot create {} on github\n".format(newrepo))
+            continue
+        req = create_irchook(newrepo)
+        if not req.status_code == 201:
+            sys.stderr.write("Cannot create irc hook for {} on github\n".format(newrepo))
 elif sys.argv[1] == 'delete':
     for cannedrepo in [repo.strip() for repo in sys.argv[2:]]:
         if check_repo(cannedrepo):
