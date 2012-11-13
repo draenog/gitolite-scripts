@@ -16,6 +16,9 @@ def check_repo(repo):
                 return 1
     return 0
 
+def github_sanitize(repo):
+    return repo.replace('+','-')
+
 def create_irchook(repo):
     ircconf = json.dumps({'name': 'irc',
                        'config' :
@@ -37,12 +40,13 @@ logpass = tuple(open(os.path.expanduser('~/auth'), 'r').readline().strip().split
 
 if sys.argv[1] == 'create':
     for newrepo in [repo.strip() for repo in sys.argv[2:]]:
+        githubrepo = github_sanitize(newrepo)
         req = requests.post("https://api.github.com/orgs/pld-linux/repos", auth=logpass,
-                data=json.dumps({'name': newrepo, 'has_issues': False, 'has_wiki': False, 'has_downloads': False}))
+                data=json.dumps({'name': githubrepo, 'has_issues': False, 'has_wiki': False, 'has_downloads': False}))
         if not req.status_code == 201:
             sys.stderr.write("Cannot create {} on github\n".format(newrepo))
             continue
-        req = create_irchook(newrepo)
+        req = create_irchook(githubrepo)
         if not req.status_code == 201:
             sys.stderr.write("Cannot create irc hook for {} on github\n".format(newrepo))
 elif sys.argv[1] == 'delete':
@@ -56,7 +60,7 @@ elif sys.argv[1] == 'delete':
             if time1 > 0:
                 time.sleep(time1)
         time1 = time.time()
-        req = requests.delete("https://api.github.com/repos/pld-linux/"+cannedrepo, auth=logpass)
+        req = requests.delete("https://api.github.com/repos/pld-linux/"+github_sanitize(cannedrepo), auth=logpass)
         need_sleep=True
         if not req.status_code == 204:
             sys.stderr.write("Cannot delete {} from github\n".format(cannedrepo))
@@ -79,7 +83,7 @@ elif sys.argv[1] == 'crthook':
             if time1 > 0:
                 time.sleep(time1)
         time1 = time.time()
-        req = create_irchook(cannedrepo)
+        req = create_irchook(github_sanitize(cannedrepo))
         need_sleep=True
         if not (req.status_code == 200 or req.status_code==201):
             sys.stderr.write("Cannot create irc hook for {} on github\n".format(cannedrepo))
