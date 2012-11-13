@@ -7,7 +7,7 @@ import requests
 import time
 
 # github limits rate of requests to 5000 per 1h
-wait = 3600./5000.
+maxwait = 3600./5000.
 
 def check_repo(repo):
     with open(os.path.expanduser("~/ignore"), "r") as f:
@@ -52,7 +52,10 @@ elif sys.argv[1] == 'delete':
             sys.stderr.write("Ignoring deletion of {} on github\n".format(cannedrepo))
             continue
         if need_sleep:
-            time.sleep(wait)
+            time1=maxwait-(time.time()-time1)
+            if time1 > 0:
+                time.sleep(time1)
+        time1 = time.time()
         req = requests.delete("https://api.github.com/repos/pld-linux/"+cannedrepo, auth=logpass)
         need_sleep=True
         if not req.status_code == 204:
@@ -72,7 +75,10 @@ elif sys.argv[1] == 'crthook':
             sys.stderr.write("Ignoring creating irc hook for {} on github\n".format(cannedrepo))
             continue
         if need_sleep:
-            time.sleep(wait)
+            time1=maxwait-(time.time()-time1)
+            if time1 > 0:
+                time.sleep(time1)
+        time1 = time.time()
         req = create_irchook(cannedrepo)
         need_sleep=True
         if not (req.status_code == 200 or req.status_code==201):
