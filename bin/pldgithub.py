@@ -4,6 +4,10 @@ import sys
 import os
 import json
 import requests
+import time
+
+# github limits rate of requests to 5000 per 1h
+wait = 3600./5000.
 
 def check_repo(repo):
     with open(os.path.expanduser("~/ignore"), "r") as f:
@@ -42,11 +46,15 @@ if sys.argv[1] == 'create':
         if not req.status_code == 201:
             sys.stderr.write("Cannot create irc hook for {} on github\n".format(newrepo))
 elif sys.argv[1] == 'delete':
+    need_sleep = False
     for cannedrepo in [repo.strip() for repo in sys.argv[2:]]:
         if check_repo(cannedrepo):
             sys.stderr.write("Ignoring deletion of {} on github\n".format(cannedrepo))
             continue
+        if need_sleep:
+            time.sleep(wait)
         req = requests.delete("https://api.github.com/repos/pld-linux/"+cannedrepo, auth=logpass)
+        need_sleep=True
         if not req.status_code == 204:
             sys.stderr.write("Cannot delete {} from github\n".format(cannedrepo))
 elif sys.argv[1] == 'description':
@@ -58,11 +66,15 @@ elif sys.argv[1] == 'description':
     if not req.status_code == 200:
         raise SystemExit("Cannot change description for {} on github".format(repo))
 elif sys.argv[1] == 'crthook':
+    need_sleep = False
     for cannedrepo in [repo.strip() for repo in sys.argv[2:]]:
         if check_repo(cannedrepo):
             sys.stderr.write("Ignoring creating irc hook for {} on github\n".format(cannedrepo))
             continue
+        if need_sleep:
+            time.sleep(wait)
         req = create_irchook(cannedrepo)
+        need_sleep=True
         if not (req.status_code == 200 or req.status_code==201):
             sys.stderr.write("Cannot create irc hook for {} on github\n".format(cannedrepo))
 
