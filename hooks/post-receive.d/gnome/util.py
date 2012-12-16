@@ -47,14 +47,17 @@ EMAIL_DELAY = 5
 
 # Some line that can never appear in any email we send out
 EMAIL_BOUNDARY="---@@@--- PLD-git-email ---@@@---\n"
+SKIPPING_BOUNDARY="---@@@--- PLD-git-email stop cut---@@@---"
 
 # Run in subprocess
-def _do_send_emails(email_in):
+def _do_send_emails(email_in, max_lines):
     email_files = []
     current_file = None
     last_line = None
 
     # Read emails from the input pipe and write each to a file
+    no_skip = max_lines <= 0
+    no_lines = 0
     for line in email_in:
         if current_file is None:
             current_file, filename = tempfile.mkstemp(suffix=".mail", prefix="pld-post-receive-email-")
@@ -68,10 +71,17 @@ def _do_send_emails(email_in):
             last_line = None
             os.close(current_file)
             current_file = None
+            no_skip = max_lines <= 0
+            no_lines = 0
+        elif line == SKIPPING_BOUNDARY + "\n":
+            no_skip = True
+            if max_lines > 0 and no_lines > max_lines:
+                last_line = '<Skipped {} lines>\n'.format(no_lines - max_lines)
         else:
-            if last_line is not None:
+            if last_line is not None and (no_skip or no_lines < max_lines):
                 os.write(current_file, last_line.encode('utf8'))
             last_line = line
+            no_lines += 1
 
     if current_file is not None:
         if last_line is not None:
@@ -97,7 +107,7 @@ email_file = None
 
 # Start a new outgoing email; returns a file object that the
 # email should be written to. Call end_email() when done
-def start_email():
+def start_email(max_lines=0):
     global email_file
     if email_file is None:
         email_pipe = os.pipe()
@@ -125,7 +135,7 @@ def start_email():
                 sys.exit(0)
 
             try:
-                _do_send_emails(email_in)
+                _do_send_emails(email_in, max_lines)
             except Exception:
                 import syslog
                 import traceback
