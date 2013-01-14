@@ -24,5 +24,5 @@ die "You don't have permissions to create $repo or it already exists\n" unless (
 new_wild_repo($repo, $user);
 wrap_print("$ENV{GL_REPO_BASE_ABS}/$repo.git/git-daemon-export-ok", "");
 if(system("$ENV{HOME}/bin/pldgithub.py", "create", $repo_short)) {
-  die "Problem with creating gihub mirror for $repo";
+  print STDERR "Problem with creating gihub mirror for $repo";
 }
