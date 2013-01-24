@@ -29,12 +29,15 @@ def create_irchook(repo):
                              'message_without_join' : '1'}})
     return requests.post("https://api.github.com/repos/pld-linux/{}/hooks".format(repo), auth=logpass, data=ircconf)
 
-if len(sys.argv) < 3 or sys.argv[1] not in ('create', 'delete', 'description', 'crthook'):
+def printhelp():
     print("""Usage: pldgithub.py create REPO [, REPO2 [, REPO3...]]
    or: pldgithub.py delete REPO [, REPO2 [, REPO3...]]
    or: pldgithub.py crthook REPO [, REPO2 [, REPO3...]]
    or: pldgithub.py description REPO 'New description'""")
     sys.exit(1)
+
+if len(sys.argv) < 3 or sys.argv[1] not in ('create', 'delete', 'description', 'crthook'):
+    printhelp()
 
 logpass = tuple(open(os.path.expanduser('~/auth'), 'r').readline().strip().split(':'))
 
