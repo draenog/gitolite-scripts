@@ -32,11 +32,14 @@ def create_irchook(repo):
 def printhelp():
     print("""Usage: pldgithub.py create REPO [, REPO2 [, REPO3...]]
    or: pldgithub.py delete REPO [, REPO2 [, REPO3...]]
+   or: pldgithub.py rename REPO NEWNAME
    or: pldgithub.py crthook REPO [, REPO2 [, REPO3...]]
    or: pldgithub.py description REPO 'New description'""")
     sys.exit(1)
 
-if len(sys.argv) < 3 or sys.argv[1] not in ('create', 'delete', 'description', 'crthook'):
+if len(sys.argv) < 3 or sys.argv[1] not in ('create', 'delete', 'rename', 'description', 'crthook'):
+    printhelp()
+elif sys.argv[1] == 'rename' and len(sys.argv) != 4:
     printhelp()
 
 logpass = tuple(open(os.path.expanduser('~/auth'), 'r').readline().strip().split(':'))
@@ -67,6 +70,12 @@ elif sys.argv[1] == 'delete':
         need_sleep=True
         if not req.status_code == 204:
             sys.stderr.write("Cannot delete {} from github\n".format(cannedrepo))
+elif sys.argv[1] == 'rename':
+    (oldrepo, newrepo) = [arg.strip() for arg in sys.argv[2:4]]
+    req = requests.patch("https://api.github.com/repos/pld-linux/"+github_sanitize(oldrepo), auth=logpass,
+            data=json.dumps({'name': github_sanitize(newrepo)}))
+    if not req.status_code == 200:
+        raise SystemExit("Cannot rename {} to {} on github".format(oldrepo, newrepo))
 elif sys.argv[1] == 'description':
     (repo, newdesc) = [arg.strip() for arg in sys.argv[2:4]]
     if check_repo(repo):
