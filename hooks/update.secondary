@@ -11,8 +11,19 @@ revlist=$(mktemp /tmp/git.update.XXXXXX)
 difflist=$(mktemp /tmp/git.update.XXXXXX)
 zero="0000000000000000000000000000000000000000"
 
+
+check_size() {
+    if [[ $fsize -gt $1 ]]; then
+        if ! echo $big_files | grep -q "^${name}\$"; then
+            echo "File $name - exceeds maximum permitted size $1"
+            bad_file_found=1
+        fi
+    fi
+}
+
 [ $new_rev = $zero ] || git rev-list $new_rev --not --all > $revlist
 while read rev; do
+   big_files=`git cat-file blob $rev:.bigfiles 2>/dev/null`
    git diff-tree -r --root $rev > $difflist
    while read old_mode new_mode old_sha1 new_sha1 status name; do
        # skip lines showing parent commit
@@ -22,7 +33,7 @@ while read rev; do
        [[ "$new_sha1" = "$zero" ]] && continue
 
        # Skip files named *patch
-       if [[ "${name%@(.patch|.diff|.spec)}" != "$name" ]]; then
+       if [[ "${name%.spec}" != "$name" ]]; then
            continue
        fi
 
@@ -46,19 +57,13 @@ while read rev; do
                 bad_file_found=1
                 ;;
            *'unified diff output'*)
+                check_size $DIFF_MAX_SIZE
                 ;;
            *'English text'*|*'ASCII text'*|*'ISO-8859 text'*|*'UTF-8 Unicode text'*|*'ASCII C program text'*)
-                if [[ $fsize -gt $DIFF_MAX_SIZE ]]; then
-                    echo "File $name - exceeds maximum permitted size $DIFF_MAX_SIZE"
-                    bad_file_found=1
-                fi
+                check_size $DIFF_MAX_SIZE
                 ;;
            *)
-                if [[ $fsize -gt $MAX_SIZE ]]; then
-                    echo "File $name - $fsize exceeds maximum permitted size $MAX_SIZE"
-                    echo "$ftype"
-                    bad_file_found=1
-                fi
+                check_size $MAX_SIZE
                 ;;
         esac
    done < $difflist
