@@ -11,5 +11,5 @@ export GIT_DIR=$(git config hooks.specsrepo)
 status=$(git status --porcelain)
 if [ -n "$status" ]; then
     git add .
-    git commit -m "Updates specs `date`"
+    git commit -m "SPECS updated `date`"
 fi
