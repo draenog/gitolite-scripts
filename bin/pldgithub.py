@@ -42,7 +42,10 @@ if len(sys.argv) < 3 or sys.argv[1] not in ('create', 'delete', 'rename', 'descr
 elif sys.argv[1] == 'rename' and len(sys.argv) != 4:
     printhelp()
 
-logpass = tuple(open(os.path.expanduser('~/auth'), 'r').readline().strip().split(':'))
+try:
+    logpass = tuple(open(os.path.expanduser('~/auth'), 'r').readline().strip().split(':'))
+except OSError as e:
+    raise SystemExit(e)
 
 if sys.argv[1] == 'create':
     for newrepo in [repo.strip() for repo in sys.argv[2:]]:
