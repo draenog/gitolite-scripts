@@ -32,10 +32,6 @@ fi
 
 if [ -f "$USER_CFG" ]; then
 	. $USER_CFG
-	# legacy fallback
-	if [ "${distro:+set}" = "set" ]; then
-		dist=$distro
-	fi
 fi
 
 # internal options, not to be overriden
