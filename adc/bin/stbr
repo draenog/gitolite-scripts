@@ -52,20 +52,20 @@ send_request() {
 	[ -z "$url" ] && die 'No url present'
 
 	msg "Sending using http mode to $url"
-	cat - | python -c '
-import sys, socket, urllib2
+	cat - | python3 -c '
+import sys, socket, urllib.request, urllib.error, urllib.parse
 
 try:
-        data = sys.stdin.read()
+        data = sys.stdin.buffer.read()
         url = sys.argv[1]
         socket.setdefaulttimeout(10)
-        req = urllib2.Request(url, data)
-        f = urllib2.urlopen(req)
+        req = urllib.request.Request(url, data)
+        f = urllib.request.urlopen(req)
         f.close()
-except Exception, e:
-        print >> sys.stderr, "Problem while sending request via HTTP: %s: %s" % (url, e)
+except Exception as e:
+        print("Problem while sending request via HTTP: %s: %s" % (url, e), file=sys.stderr)
         sys.exit(1)
-print >> sys.stdout, "Request queued via HTTP."
+print("Request queued via HTTP.", file=sys.stdout)
 ' "$url"
 }
 
