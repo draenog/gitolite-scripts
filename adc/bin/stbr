@@ -14,7 +14,6 @@ without=
 flags=
 command=
 command_flags=
-gpg_opts=
 default_branch='HEAD'
 dist=
 url=
@@ -321,11 +320,6 @@ while [ $# -gt 0 ]; do
 
 		--update-macros)
 			upgrade_macros="yes"
-			;;
-
-		--gpg-opts | -g)
-			gpg_opts="$2"
-			shift
 			;;
 
 		--help | -h)
@@ -646,7 +640,7 @@ gen_email () {
 
 	EOF
 
-	gpg --clearsign --default-key $default_key $gpg_opts --output=- $tmp
+	gpg --clearsign --default-key $default_key --output=- $tmp
 	rm -f $tmp
 }
 
