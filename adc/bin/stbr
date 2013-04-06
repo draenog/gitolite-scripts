@@ -64,7 +64,6 @@ fi
 
 # internal options, not to be overriden
 specs=
-df_fetch=no
 upgrade_macros=no
 cr=$(printf "\r")
 
@@ -113,49 +112,6 @@ print >> sys.stdout, "Request queued via HTTP."
 hsc() {
 	local input=$1
 	echo -E "$input" | sed -e 's,&,\&amp;,g;s,<,\&lt;,g;s,>,\&gt;,g'
-}
-
-# simple df_fetcher, based on packages/fetchsrc_request
-# TODO: tcp (smtp) mode
-# TODO: adjust for ~/.requestrc config
-df_fetch() {
-	local specs="$@"
-
-	# Sending by
-	local MAILER='/usr/sbin/sendmail'
-	# MAILER='/usr/bin/msmtp'
-	# Sending via
-	local VIA="SENDMAIL"
-	#VIA="localhost"
-	local VIA_ARGS=""
-	#VIA_ARGS="some additional flags"
-	# e.g. for msmtp:
-	# VIA_ARGS='-a gmail'
-	#
-	# DISTFILES EMAIL
-	local DMAIL="distfiles@pld-linux.org"
-
-	local HOST=$(hostname -f)
-	local LOGIN=${requester%@*}
-
-	for spec in $specs; do
-		local SPEC=$(echo "$spec" | sed -e 's|:.*||')
-                SPEC=${SPEC%.spec}
-		local BRANCH=$(echo "$spec" | sed -e 's|.*:||')
-		echo >&2 "Distfiles Request: $SPEC:$BRANCH via $MAILER ${VIA_ARGS:+ ($VIA_ARGS)}"
-		cat <<-EOF | "$MAILER" -t -i $VIA_ARGS
-			To: $DMAIL
-			From: $LOGIN <$LOGIN@$HOST>
-			Subject: fetchsrc_request notify
-			X-distfiles-request: yes
-			X-Login: $LOGIN
-			X-Package: $SPEC
-			X-Branch: $BRANCH
-			X-Flags: force-reply
-
-			.
-			EOF
-	done
 }
 
 # autotag from rpm-build-macros
@@ -245,8 +201,6 @@ Mandatory arguments to long options are mandatory for short options too.
       -f, --flag
       -d, --dist DISTRIBUTION_ID
             Specify value for \$dist
-      -df,  --distfiles-fetch[-request] PACKAGE
-            Send distfiles request to fetch sources for PACKAGE
       -cf, --command-flag
             Not yet documented
       -c, --command
@@ -464,10 +418,6 @@ while [ $# -gt 0 ]; do
 			upgrade_macros="yes"
 			;;
 
-		-df | --distfiles-fetch | --distfiles-fetch-request)
-			df_fetch=yes
-			;;
-
 		--gpg-opts | -g)
 			gpg_opts="$2"
 			shift
@@ -619,11 +569,6 @@ done`
 if [ "$autotag" = "yes" ]; then
 	msg "Auto autotag build enabled"
 	specs=$(get_autotag $specs)
-fi
-
-if [ "$df_fetch" = "yes" ]; then
-	df_fetch $specs
-	exit 0
 fi
 
 if [ "$upgrade_macros" = "yes" ]; then
