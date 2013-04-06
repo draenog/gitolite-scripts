@@ -22,12 +22,7 @@ no_depend=no
 verbose=no
 autotag=no
 
-if [ -x /usr/bin/python ]; then
-	send_mode="python"
-else
-	echo "No python present, using mail mode"
-	send_mode="mail"
-fi
+[ -x /usr/bin/python ] || die 'python is missing; ls'
 
 if [ -n "$HOME_ETC" ]; then
 	USER_CFG=$HOME_ETC/.requestrc
@@ -60,17 +55,10 @@ red() {
 }
 
 send_request() {
-	# switch to mail mode, if no url set
-	[ -z "$url" ] && send_mode="mail"
+	[ -z "$url" ] && die 'No url present'
 
-	case "$send_mode" in
-	"mail")
-		msg "Sending using mail mode"
-		cat - | $mailer
-		;;
-	*)
-		msg "Sending using http mode to $url"
-		cat - | python -c '
+	msg "Sending using http mode to $url"
+	cat - | python -c '
 import sys, socket, urllib2
 
 try:
@@ -85,8 +73,6 @@ except Exception, e:
         sys.exit(1)
 print >> sys.stdout, "Request queued via HTTP."
 ' "$url"
-		;;
-	esac
 }
 
 # htmlspecialchars: escape <, > and &
@@ -604,11 +590,7 @@ gen_req() {
 		msg "Using jobs $jobs"
 		echo "	<maxjobs>$jobs</maxjobs>"
 	fi
-	if [ -z "$url" ]; then
-		msg "Using email $builder_email"
-	else
-		msg "Using URL $url"
-	fi
+	msg "Using URL $url"
 
 	if [ "$build_mode" = "ready" ]; then
 		msg "Build mode: $(tput setaf 2)$build_mode$c_norm"
