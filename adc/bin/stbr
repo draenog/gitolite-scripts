@@ -35,25 +35,6 @@ else
 	USER_CFG=$HOME/.requestrc
 fi
 
-if [ ! -f "$USER_CFG" ]; then
-	echo "Creating config file $USER_CFG. You *must* edit it."
-	cat > $USER_CFG <<EOF
-priority=2
-requester=deviloper@pld-linux.org
-default_key=deviloper@pld-linux.org
-send_mode="$send_mode"
-url="$url"
-mailer="/usr/sbin/sendmail -t"
-gpg_opts=""
-dist=th
-url="http://src.th.pld-linux.org:1234/"
-
-# defaults:
-f_upgrade=yes
-EOF
-exit
-fi
-
 if [ -f "$USER_CFG" ]; then
 	. $USER_CFG
 	# legacy fallback
