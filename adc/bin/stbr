@@ -3,6 +3,11 @@
 # prevent "*" from being expanded in builders var
 set -f
 
+die() {
+	echo >&2 "$0: $*"
+	exit 1
+}
+
 builders=
 with=
 without=
@@ -72,11 +77,6 @@ msg() {
 }
 red() {
 	echo "${c_red}$*${c_norm}"
-}
-
-die() {
-	echo >&2 "$0: $*"
-	exit 1
 }
 
 send_request() {
