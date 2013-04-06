@@ -82,9 +82,6 @@ Usage: make-request.sh [OPTION] ... [SPECFILE] ....
 
 Mandatory arguments to long options are mandatory for short options too.
 
-      --config-file /path/to/config/file
-            Source additional config file (after $USER_CFG), useful when
-            when sending build requests to Ac/Th from the same account
       -b 'BUILDER BUILDER ...',  --builder='BUILDER BUILDER ...'
             Sends request to given builders (in 'version-arch' format)
       --with VALUE, --without VALUE
@@ -175,11 +172,6 @@ while [ $# -gt 0 ]; do
 	case "$1" in
 		-d | --dist | --distro)
 			set_dist $2
-			shift
-			;;
-
-		--config-file)
-			[ -f "$2" ] && . $2 || die "Config file not found"
 			shift
 			;;
 
