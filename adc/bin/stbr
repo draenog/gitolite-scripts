@@ -510,6 +510,7 @@ id=$(uuidgen)
 
 gen_req() {
 	echo "<group id='$id' no='0' flags='$flags'>"
+        [ -n "$GL_USER" ] && echo " <requester email='$GL_USER@pld-linux.org'>$GL_USER</requester>"
 	echo "	<time>$(date +%s)</time>"
 	msg "Using priority $priority"
 	echo "	<priority>$priority</priority>"
