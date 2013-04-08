@@ -38,14 +38,8 @@ upgrade_macros=no
 cr=$(printf "\r")
 
 # Set colors
-c_star=$(tput setaf 2)
-c_red=$(tput setaf 1)
-c_norm=$(tput op)
 msg() {
-	echo >&2 "${c_star}*${c_norm} $*"
-}
-red() {
-	echo "${c_red}$*${c_norm}"
+	echo >&2 "$*"
 }
 
 send_request() {
@@ -521,9 +515,9 @@ gen_req() {
 	msg "Using URL $url"
 
 	if [ "$build_mode" = "ready" ]; then
-		msg "Build mode: $(tput setaf 2)$build_mode$c_norm"
+		msg "Build mode: $build_mode"
 	else
-		msg "Build mode: $(tput setaf 3)$build_mode$c_norm"
+		msg "Build mode: $build_mode"
 	fi
 
 	msg "Queue-ID: $id"
@@ -535,7 +529,7 @@ gen_req() {
 	local name branch builders_xml
 
 	for b in $builders; do
-		msg "Builder: $(red $b)"
+		msg "Builder: "
 		builders_xml="$builders_xml <builder>$b</builder>"
 	done
 
