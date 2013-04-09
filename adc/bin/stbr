@@ -3,10 +3,14 @@
 # prevent "*" from being expanded in builders var
 set -f
 
+.  $(dirname $0)/adc.common-functions
+
 die() {
 	echo >&2 "$(basename $0): $*"
 	exit 1
 }
+
+in_group pld-devel || die "You don't have permissions to run stbr"
 
 builders=
 with=
