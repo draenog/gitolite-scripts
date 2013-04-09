@@ -4,7 +4,7 @@
 set -f
 
 die() {
-	echo >&2 "$0: $*"
+	echo >&2 "$(basename $0): $*"
 	exit 1
 }
 
