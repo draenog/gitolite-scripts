@@ -264,6 +264,8 @@ Mandatory arguments to long options are mandatory for short options too.
             Updates builders infrastructure (outside chroot)
       --update-macros
             Updates rpm-build-macros on src builder
+      --update-scripts
+            Updates ~/rpm/rpm-build-tools on builder
       -q
             shortcut for --command rpm -q ARGS
       -g, --gpg-opts "opts"
@@ -449,9 +451,6 @@ while [ $# -gt 0 ]; do
 			f_upgrade=no
 			shift
 			;;
-                --update-scripts)
-                        upgrade_scripts='yes'
-                        ;;
 		-q)
 			command="rpm -q $2"
 			f_upgrade=no
@@ -467,6 +466,10 @@ while [ $# -gt 0 ]; do
 		--update-macros)
 			upgrade_macros="yes"
 			;;
+
+                --update-scripts)
+                        upgrade_scripts='yes'
+                        ;;
 
 		-df | --distfiles-fetch | --distfiles-fetch-request)
 			df_fetch=yes
