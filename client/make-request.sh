@@ -449,7 +449,7 @@ while [ $# -gt 0 ]; do
 			f_upgrade=no
 			shift
 			;;
-                --upgrade-scripts)
+                --update-scripts)
                         upgrade_scripts='yes'
                         ;;
 		-q)
