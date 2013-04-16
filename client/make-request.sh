@@ -61,6 +61,7 @@ fi
 specs=
 df_fetch=no
 upgrade_macros=no
+upgrade_scripts=no
 cr=$(printf "\r")
 
 # Set colors
@@ -448,6 +449,9 @@ while [ $# -gt 0 ]; do
 			f_upgrade=no
 			shift
 			;;
+                --upgrade-scripts)
+                        upgrade_scripts='yes'
+                        ;;
 		-q)
 			command="rpm -q $2"
 			f_upgrade=no
@@ -628,6 +632,14 @@ fi
 
 if [ "$upgrade_macros" = "yes" ]; then
 	command="poldek --up; poldek -uv rpm-build-macros"
+	builders="$dist-src"
+	f_upgrade=no
+	build_mode=test
+fi
+
+if [ "$upgrade_scripts" = "yes" ]; then
+	command="cd ~/rpm/rpm-build-tools && git pull"
+	command_flags=as-builder
 	builders="$dist-src"
 	f_upgrade=no
 	build_mode=test
