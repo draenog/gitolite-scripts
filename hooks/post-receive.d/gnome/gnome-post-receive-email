@@ -496,9 +496,10 @@ class BranchDeletion(RefChange):
 
     def generate_body(self, out):
         print(s("""
-The branch '%(short_refname)s' was deleted.
+The branch '%(short_refname)s' was deleted at %(sha1)s.
 """) % {
             'short_refname': self.short_refname,
+            'sha1': self.oldrev
        }, file=out)
 
 # ========================
