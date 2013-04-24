@@ -1,0 +1,661 @@
+#!/bin/sh
+
+# prevent "*" from being expanded in builders var
+set -f
+
+.  $(dirname $0)/adc.common-functions
+
+die() {
+	echo >&2 "$(basename $0): $*"
+	exit 1
+}
+
+in_group pld-devel || die "You don't have permissions to run stbr"
+
+builders=
+with=
+without=
+flags=
+command=
+command_flags=
+default_branch='HEAD'
+dist=
+url=
+no_depend=no
+verbose=no
+
+[ -x /usr/bin/python ] || die 'python is missing; ls'
+
+if [ -n "$HOME_ETC" ]; then
+	USER_CFG=$HOME_ETC/.requestrc
+else
+	USER_CFG=$HOME/.requestrc
+fi
+
+if [ -f "$USER_CFG" ]; then
+	. $USER_CFG
+fi
+
+# internal options, not to be overriden
+specs=
+upgrade_macros=no
+upgrade_scripts=no
+cr=$(printf "\r")
+
+# Set colors
+msg() {
+	echo >&2 "$*"
+}
+
+send_request() {
+	[ -z "$url" ] && die 'No url present'
+
+	msg "Sending using http mode to $url"
+	cat - | python3 -c '
+import sys, socket, urllib.request, urllib.error, urllib.parse
+
+try:
+        data = sys.stdin.buffer.read()
+        url = sys.argv[1]
+        socket.setdefaulttimeout(10)
+        req = urllib.request.Request(url, data)
+        f = urllib.request.urlopen(req)
+        f.close()
+except Exception as e:
+        print("Problem while sending request via HTTP: %s: %s" % (url, e), file=sys.stderr)
+        sys.exit(1)
+print("Request queued via HTTP.", file=sys.stdout)
+' "$url"
+}
+
+# htmlspecialchars: escape <, > and &
+hsc() {
+	local input=$1
+	echo -E "$input" | sed -e 's,&,\&amp;,g;s,<,\&lt;,g;s,>,\&gt;,g'
+}
+
+usage() {
+	cat <<EOF
+Usage: make-request.sh [OPTION] ... [SPECFILE] ....
+
+Mandatory arguments to long options are mandatory for short options too.
+
+      -b 'BUILDER BUILDER ...',  --builder='BUILDER BUILDER ...'
+            Sends request to given builders (in 'version-arch' format)
+      --with VALUE, --without VALUE
+            Build package with(out) a given bcond
+      --kernel VALUE
+            set alt_kernel to VALUE
+      --target VALUE
+            set --target to VALUE
+      -D "NAME VALUE"|--define "NAME VALUE"
+            define macro named NAME with value VALUE
+      -s BUILD_ID, --skip BUILD_ID[,BUILD_ID][,BUILD_ID]
+            mark build ids on src builder to be skipped
+      --branch VALUE
+            specify default branch for specs in request
+      -t, --test-build
+            Performs a 'test-build'. Package will be uploaded to hidden .test-builds/
+            ftp tree and won't be upgraded on builders.
+      -r, --ready-build
+            Preforms a 'ready' build. Package will be built and uploaded to test/ ftp tree
+            (and later moved by release manager staff to ready/ and main ftp tree)
+      -u, --upgrade
+            Forces package upgrade (for use with -c or -q, not -t)
+      -n, --no-upgrade
+            Disables package upgrade (for use with -r)
+      -ni, --no-install-br
+            Do not install missing BuildRequires (--nodeps)
+      -nd, --no-depend
+            Do not add dependency of build jobs, each job in batch runs itself
+      -j, --jobs
+            Number of parallel jobs for single build
+      -f, --flag
+      -d, --dist DISTRIBUTION_ID
+            Specify value for \$dist
+      -cf, --command-flag
+            Not yet documented
+      -c, --command
+            Executes a given command on builders (prepended to build jobs if build jobs included)
+      -C, --post-command
+            Executes a given command on builders (appended to build jobs if build jobs included)
+      --test-remove-pkg
+            shortcut for --command poldek -evt ARGS
+      --remove-pkg
+            shortcut for --command poldek -ev --noask ARGS
+      --upgrade-pkg
+            shortcut for --command poldek --up -Uv ARGS
+      --pull
+            Updates builders infrastructure (outside chroot)
+      --update-macros
+            Updates rpm-build-macros on src builder
+      --update-scripts
+            Updates ~/rpm/rpm-build-tools on builder
+      -q
+            shortcut for --command rpm -q ARGS
+      -g, --gpg-opts "opts"
+            Pass additional options to gpg binary
+      -p, --priority VALUE
+            sets request priority (default 2)
+      -h, --help
+            Displays this help message
+EOF
+	exit 0
+}
+
+# validate distro, set $dist
+set_dist() {
+	case "$1" in
+	ac)
+		;;
+	ac-java|ac-xen)
+		;;
+	ti)
+		;;
+	ti-dev)
+		;;
+	th)
+		;;
+	th-java)
+		;;
+	aidath)
+		;;
+	*)
+		die "dist \`$1' not known"
+		;;
+	esac
+
+	dist=$1
+}
+
+while [ $# -gt 0 ]; do
+	case "$1" in
+		-d | --dist | --distro)
+			set_dist $2
+			shift
+			;;
+
+		--builder | -b)
+			for b in $2; do
+				builders="$builders ${b%:*}"
+			done
+			shift
+			;;
+
+		--with)
+			with="$with $(echo "$2" | tr ',' ' ')"
+			shift
+			;;
+
+		--without)
+			without="$without $(echo "$2" | tr ',' ' ')"
+			shift
+			;;
+
+		--test-build | -t)
+			build_mode=test
+			f_upgrade=no
+			;;
+
+		--kernel)
+			kernel=$2
+			shift
+			;;
+
+		--target)
+			target=$2
+			shift
+			;;
+
+		-D|--define)
+			value=${2#* }
+			name=${2%% *}
+			define="$define$cr$name=$value"
+			shift
+			;;
+
+		-s|--skip)
+			skip="$2"
+			shift
+			;;
+
+		--branch)
+			branch=$2
+			shift
+			;;
+
+		--priority | -p)
+			priority=$2
+			shift
+			;;
+
+		--ready-build | -r)
+			build_mode=ready
+			;;
+
+		--upgrade | -u)
+			f_upgrade=yes
+			;;
+
+		--no-upgrade | -n)
+			f_upgrade=no
+			;;
+
+		--no-depend | -nd)
+			no_depend=yes
+			;;
+
+		--no-install-br | -ni)
+			flags="$flags no-install-br"
+			;;
+
+		-j | --jobs)
+			jobs="$2"
+			shift
+			;;
+
+		-j*)
+			jobs="${1#-j}"
+			;;
+
+		-v)
+			verbose=yes
+			;;
+
+		--flag | -f)
+			flags="$flags $2"
+			shift
+			;;
+
+		--command-flags | -cf)
+			command_flags="$2"
+			shift
+			;;
+
+		--command | -c)
+			command="$2"
+			if [ "$command" = - ]; then
+				echo >&2 "Reading command from STDIN"
+				echo >&2 "---"
+				command=$(cat)
+				echo >&2 "---"
+			fi
+			shift
+			;;
+		--post-command | -C)
+			post_command="$2"
+			if [ "$post_command" = - ]; then
+				echo >&2 "Reading post_command from STDIN"
+				echo >&2 "---"
+				post_command=$(cat)
+				echo >&2 "---"
+			fi
+			shift
+			;;
+		--test-remove-pkg)
+			command="poldek -evt $2"
+			f_upgrade=no
+			shift
+			;;
+		--remove-pkg)
+			command="for a in $2; do poldek -ev --noask \$a; done"
+			f_upgrade=no
+			shift
+			;;
+		--upgrade-pkg|-Uhv)
+			command="poldek --up; poldek -uv $2"
+			f_upgrade=no
+			shift
+			;;
+		-q)
+			command="rpm -q $2"
+			f_upgrade=no
+			shift
+			;;
+
+		--pull)
+			command_flags="no-chroot"
+			command="git pull"
+			f_upgrade=no
+			;;
+
+		--update-macros)
+			upgrade_macros="yes"
+			;;
+
+                --update-scripts)
+                        upgrade_scripts='yes'
+                        ;;
+
+		--help | -h)
+			usage
+			;;
+
+		-*)
+			die "unknown knob: $1"
+			;;
+
+		*:* | *)
+			specs="$specs $1"
+			;;
+	esac
+	shift
+done
+
+case "$dist" in
+ac)
+	builder_email="builder-ac@pld-linux.org"
+	default_builders="ac-*"
+	default_branch="AC-branch"
+	url="http://ep09.pld-linux.org:1289/"
+	control_url="http://ep09.pld-linux.org/~buildsrc"
+	;;
+ac-java) # fake "dist" for java available ac architectures
+	builder_email="builder-ac@pld-linux.org"
+	default_builders="ac-i586 ac-i686 ac-athlon ac-amd64"
+	default_branch="AC-branch"
+	url="http://ep09.pld-linux.org:1289/"
+	;;
+ac-xen) # fake "dist" for xen-enabled architectures
+	builder_email="builder-ac@pld-linux.org"
+	default_builders="ac-i686 ac-athlon ac-amd64"
+	default_branch="AC-branch"
+	;;
+ti)
+	builder_email="builderti@ep09.pld-linux.org"
+	default_builders="ti-*"
+	url="http://ep09.pld-linux.org:1231/"
+	control_url="http://ep09.pld-linux.org/~builderti"
+	;;
+ti-dev)
+	builder_email="buildertidev@ep09.pld-linux.org"
+	default_builders="ti-dev-*"
+	url="http://ep09.pld-linux.org:1232/"
+	control_url="http://ep09.pld-linux.org/~buildertidev"
+	;;
+th)
+	builder_email="builderth@pld-linux.org"
+	default_builders="th-*"
+	url="http://src.th.pld-linux.org:1234/"
+	control_url="http://src.th.pld-linux.org"
+	;;
+th-java) # fake "dist" for java available th architectures
+	builder_email="builderth@pld-linux.org"
+	default_builders="th-x86_64 th-athlon th-i686"
+	url="http://src.th.pld-linux.org:1234/"
+	;;
+aidath)
+	builder_email="builderaidath@ep09.pld-linux.org"
+	default_builders="aidath-*"
+	;;
+*)
+	die "dist \`$dist' not known"
+	;;
+esac
+
+# need to do this after dist selection
+if [ "$skip" ]; then
+	skip=$(skip="$skip" control_url="$control_url" python -c '
+import urllib2
+import sys
+import StringIO
+import gzip
+import re
+import os
+import string
+from xml.dom import minidom
+
+skip = os.environ.get("skip").split(",");
+control_url = os.environ.get("control_url")
+
+print >> sys.stderr, "* Check queue_id-s against %s" % control_url
+
+try:
+	headers = { "Cache-Control": "no-cache", "Pragma": "no-cache" }
+	req = urllib2.Request(url=control_url + "/queue.gz", headers=headers)
+	f = urllib2.urlopen(req)
+except Exception, e:
+	print >> sys.stderr, "Fetch error %s: %s" % (control_url + "/queue.gz", e)
+	sys.exit(1)
+
+sio = StringIO.StringIO()
+sio.write(f.read())
+f.close()
+sio.seek(0)
+f = gzip.GzipFile(fileobj = sio)
+
+xml = re.compile("(<queue>.*?</queue>)", re.DOTALL).match(f.read()).group(1)
+d = minidom.parseString(xml)
+
+q = []
+for c in d.documentElement.childNodes:
+	if c.nodeName != "group":
+		continue
+	q.append(c.attributes["id"].value)
+
+err = 0
+for s in skip:
+	if s not in q:
+		print >> sys.stderr, "- Check %s: ERROR: Not valid queue-id" % s
+		err = 1
+	else:
+		print >> sys.stderr, "- Check %s: OK" % s
+if err == 1:
+	sys.exit(1)
+print string.join(skip, ",")
+') || exit $?
+	f_upgrade=no
+	build_mode=test
+	priority=-1
+	command="skip:$skip"
+	command_flags="no-chroot"
+	builders="$dist-src"
+fi
+
+branch=${branch:-$default_branch}
+
+specs=`for s in $specs; do
+	case "$s" in
+	^)
+		# skip marker - pass it along
+		echo $s
+		;;
+	*:*) # package name with branch
+		_specfile=$(basename ${s%:*})
+		echo ${_specfile%.spec}.spec:${s##*:}
+		;;
+	*) # just package name
+		echo $(basename ${s%.spec}).spec:$branch
+		;;
+	esac
+done`
+
+if [ "$upgrade_macros" = "yes" ]; then
+	command="poldek --up; poldek -uv rpm-build-macros"
+	builders="$dist-src"
+	f_upgrade=no
+	build_mode=test
+fi
+
+if [ "$upgrade_scripts" = "yes" ]; then
+	command="cd ~/rpm/rpm-build-tools && git pull"
+	command_flags=as-builder
+	builders="$dist-src"
+	f_upgrade=no
+	build_mode=test
+fi
+
+if [[ "$requester" != *@* ]] ; then
+	requester="$requester@pld-linux.org"
+fi
+
+if [ -z "$builders" ] ; then
+	builders="$default_builders"
+fi
+
+if [ "$f_upgrade" = "yes" ] ; then
+	flags="$flags upgrade"
+fi
+
+if [ "$build_mode" = "test" ] ; then
+	if [ "$f_upgrade" = "yes" ] ; then
+		die "--upgrade and --test-build are mutually exclusive"
+	fi
+	flags="$flags test-build"
+fi
+
+if [ -z "$build_mode" ] ; then
+	# missing build mode, builders go crazy when you proceed"
+	die "please specify build mode"
+fi
+
+
+ok=
+for s in $specs; do
+	ok=1
+done
+
+if [ -z "$specs" -a -z "$command" ]; then
+	die "no packages to build or command to invoke specified"
+fi
+
+id=$(uuidgen)
+
+gen_req() {
+	echo "<group id='$id' no='0' flags='$flags'>"
+        [ -n "$GL_USER" ] && echo " <requester email='$GL_USER@pld-linux.org'>$GL_USER</requester>"
+	echo "	<time>$(date +%s)</time>"
+	msg "Using priority $priority"
+	echo "	<priority>$priority</priority>"
+	if [ -n "$jobs" ]; then
+		msg "Using jobs $jobs"
+		echo "	<maxjobs>$jobs</maxjobs>"
+	fi
+	msg "Using URL $url"
+
+	if [ "$build_mode" = "ready" ]; then
+		msg "Build mode: $build_mode"
+	else
+		msg "Build mode: $build_mode"
+	fi
+
+	msg "Queue-ID: $id"
+	echo
+
+	# job to depend on
+	local depend=
+	local b i=1 val
+	local name branch builders_xml
+
+	for b in $builders; do
+		msg "Builder: "
+		builders_xml="$builders_xml <builder>$b</builder>"
+	done
+
+	if [ "$command" ]; then
+		bid=$(uuidgen)
+		echo -E >&2 "* Command: $command"
+		echo "	<batch id='$bid' depends-on=''>"
+		echo "		 <command flags='$command_flags'>"
+		hsc "$command"
+		echo "</command>"
+		echo "		 <info></info>"
+		echo "$builders_xml"
+		echo "	</batch>"
+		depend=$bid
+	fi
+
+	if [ "$f_upgrade" = "yes" ] ; then
+		msg "Upgrade mode: $f_upgrade"
+	fi
+
+	for s in $specs; do
+		# skip marker
+		if [ "$s" = "^" ]; then
+			depend=
+			continue
+		fi
+		if [ "$no_depend" = yes ]; then
+			depend=
+		fi
+		bid=$(uuidgen)
+		echo "	<batch id='$bid' depends-on='$depend'>"
+
+		name=$(echo "$s" | sed -e 's|:.*||')
+		branch=$(echo "$s" | sed -e 's|.*:||')
+		msg "Adding #$i $name:$branch${kernel:+ alt_kernel=$kernel}${target:+ target=$target}${depend:+ depends on $depend}"
+		echo "		 <spec>$name</spec>"
+		echo "		 <branch>$branch</branch>"
+		echo "		 ${kernel:+<kernel>$kernel</kernel>}"
+		echo "		 ${target:+<target>$target</target>}"
+
+		oIFS=$IFS; IFS=$cr
+		for b in $define; do
+			[ -z "$b" ] && continue
+			value=${b#*=}
+			b=${b%%=*}
+			echo "		 <define name='$(hsc $b)'>$(hsc "$value")</define>"
+		done
+		IFS=$oIFS
+
+		echo "		 <info></info>"
+		echo
+		for b in $with; do
+			echo "		 <with>$b</with>"
+		done
+		for b in $without; do
+			echo "		 <without>$b</without>"
+		done
+		echo
+		echo "$builders_xml"
+		echo "	</batch>"
+		i=$((i+1))
+
+		# let next job depend on previous
+		depend=$bid
+	done
+
+	if [ "$post_command" ]; then
+		bid=$(uuidgen)
+		if [ "$no_depend" = yes ]; then
+			depend=
+		fi
+		echo -E >&2 "* Post-Command: $post_command"
+		echo "	<batch id='$bid' depends-on='$depend'>"
+		echo "		 <command flags='$command_flags'>"
+		hsc "$post_command"
+		echo "</command>"
+		echo "		 <info></info>"
+		echo "$builders_xml"
+		echo "	</batch>"
+		depend=$bid
+	fi
+
+	echo "</group>"
+}
+
+gen_email () {
+	# make request first, so the STDERR/STDOUT streams won't be mixed
+	local tmp req
+	tmp=$(mktemp)
+	gen_req > $tmp
+
+	if [ "$verbose" = "yes" ]; then
+		cat $tmp >&2
+	fi
+
+	cat <<-EOF
+	From: $requester
+	To: $builder_email
+	Subject: build request
+	Message-Id: <$id@$(hostname)>
+	X-New-PLD-Builder: request
+	X-Requester-Version: \$Id$
+
+	EOF
+
+	gpg --clearsign --default-key $default_key --output=- $tmp
+	rm -f $tmp
+}
+
+gen_email | send_request
