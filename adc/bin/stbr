@@ -39,6 +39,7 @@ fi
 # internal options, not to be overriden
 specs=
 upgrade_macros=no
+upgrade_scripts=no
 cr=$(printf "\r")
 
 # Set colors
@@ -128,6 +129,8 @@ Mandatory arguments to long options are mandatory for short options too.
             Updates builders infrastructure (outside chroot)
       --update-macros
             Updates rpm-build-macros on src builder
+      --update-scripts
+            Updates ~/rpm/rpm-build-tools on builder
       -q
             shortcut for --command rpm -q ARGS
       -g, --gpg-opts "opts"
@@ -320,6 +323,10 @@ while [ $# -gt 0 ]; do
 			upgrade_macros="yes"
 			;;
 
+                --update-scripts)
+                        upgrade_scripts='yes'
+                        ;;
+
 		--help | -h)
 			usage
 			;;
@@ -465,6 +472,14 @@ done`
 
 if [ "$upgrade_macros" = "yes" ]; then
 	command="poldek --up; poldek -uv rpm-build-macros"
+	builders="$dist-src"
+	f_upgrade=no
+	build_mode=test
+fi
+
+if [ "$upgrade_scripts" = "yes" ]; then
+	command="cd ~/rpm/rpm-build-tools && git pull"
+	command_flags=as-builder
 	builders="$dist-src"
 	f_upgrade=no
 	build_mode=test
