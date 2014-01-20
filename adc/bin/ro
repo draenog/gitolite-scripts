@@ -1,0 +1,23 @@
+#!/bin/sh
+
+
+. $(dirname $0)/adc.common-functions
+PROG=$(basename $0)
+
+pkg=$1
+[ $# -ge 2 -a -n "$1" ] || die 'Usage: ssh git@git.pld-linux.org ro <package> <message>'
+shift
+
+echo "$*" > $GL_REPO_BASE_ABS/packages/"${pkg}.git"/.gitolite.down
+
+mailinglist=$(git config hooks.mailinglist)
+if [ -n "$mailinglist" ]; then
+    /usr/sbin/sendmail -t <<EOF
+From: $GL_USER@pld-linux.org
+To: $mailinglist
+Subject: [$PROG command] packages/$pkg
+Reply-To: $(git config hooks.replyto)
+
+$*
+EOF
+fi
