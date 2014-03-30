@@ -35,6 +35,7 @@ import os
 import pwd
 import subprocess
 import sys
+import time
 from email import header as Header
 import email.utils
 
@@ -545,10 +546,10 @@ class AnnotatedTagChange(RefChange):
                 # I don't know what a more robust rule is for dividing the
                 # name and date, other than maybe looking explicitly for a
                 # RFC 822 date. This seems to work pretty well
-                m = re.match(r"tagger\s+([^>]*>)\s*(.*)", line)
+                m = re.match(r"tagger\s+([^>]*>)\s*([0-9]+)", line)
                 if m:
                     self.tagger = m.group(1)
-                    self.date = m.group(2)
+                    self.date = time.strftime("%a %d %b %Y %H:%M:%S %z", time.localtime(int(m.group(2))))
                     continue
         self.message = "\n".join(["    " + line for line in message_lines])
 
