@@ -17,12 +17,20 @@ if (os.path.isdir('hooks/post-receive.d')):
             continue
         hook_process = subprocess.Popen([hook], stdin=subprocess.PIPE)
         try:
-            for line in data:
-                hook_process.stdin.write(line.encode('utf-8'))
-        except IOError:
-            pass
-        hook_process.communicate()
+            try:
+                for line in data:
+                    hook_process.stdin.write(line.encode('utf-8'))
+            except IOError:
+                pass
+            hook_process.communicate()
+        except Exception as e:
+            print('Error in hook ', hook)
+            print(e)
 
 for pluginfile in glob.glob('hooks/post-receive.python.d/*.py'):
-    plugin = imp.load_source(os.path.basename(pluginfile), pluginfile)
-    plugin.run(data)
+    try:
+        plugin = imp.load_source(os.path.basename(pluginfile), pluginfile)
+        plugin.run(data)
+    except Exception as e:
+        print('Error in hook ', pluginfile)
+        print(e)
