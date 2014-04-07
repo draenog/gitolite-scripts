@@ -17,12 +17,11 @@ if (os.path.isdir('hooks/post-receive.d')):
             continue
         hook_process = subprocess.Popen([hook], stdin=subprocess.PIPE)
         try:
-            try:
-                for line in data:
-                    hook_process.stdin.write(line.encode('utf-8'))
-            except IOError:
-                pass
+            for line in data:
+                hook_process.stdin.write(line.encode('utf-8'))
             hook_process.communicate()
+        except BrokenPipeError:
+            pass
         except Exception as e:
             print('Error in hook ', hook)
             print(e)
