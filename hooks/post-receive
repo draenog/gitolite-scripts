@@ -24,7 +24,7 @@ if (os.path.isdir('hooks/post-receive.d')):
             pass
         except Exception as e:
             print('Error in hook ', hook)
-            print(e)
+            print(type(e), e)
 
 for pluginfile in glob.glob('hooks/post-receive.python.d/*.py'):
     try:
